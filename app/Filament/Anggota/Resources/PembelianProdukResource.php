@@ -18,41 +18,81 @@ class PembelianProdukResource extends Resource
 {
     protected static ?string $model = PembelianProduk::class;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
-    protected static ?string $navigationLabel = 'Pembelian Produk';
+    protected static ?string $navigationLabel = 'Penjualan Produk';
     protected static ?string $navigationGroup = 'Produk';
     protected static ?int $navigationSort = 2;
-    protected static ?string $pluralModelLabel = 'Daftar Pembelian Produk';
-    protected static ?string $modelLabel = 'Pembelian Produk';
+    protected static ?string $pluralModelLabel = 'Daftar Penjualan Produk';
+    protected static ?string $modelLabel = 'Penjualan Produk';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('produk_id')
-                    ->relationship('produk', 'nama')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+                Forms\Components\Section::make('Detail Penjualan')
+                    ->schema([
+                        Forms\Components\TextInput::make('nama')
+                            ->label('Nama Produk')
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->produk) {
+                                    $component->state($record->produk->nama);
+                                }
+                            }),
+                        Forms\Components\TextInput::make('name')
+                            ->label('Pembeli')
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->pembeli) {
+                                    $component->state($record->pembeli->name);
+                                }
+                            }),
 
-                Forms\Components\TextInput::make('jumlah')
-                    ->required()
-                    ->numeric()
-                    ->minValue(1)
-                    ->default(1),
+                        Forms\Components\TextInput::make('jumlah')
+                            ->label('Jumlah')
+                            ->disabled(),
 
-                Forms\Components\Textarea::make('catatan')
-                    ->maxLength(500),
+                        Forms\Components\TextInput::make('harga_satuan')
+                            ->label('Harga Satuan')
+                            ->prefix('Rp')
+                            ->disabled(),
 
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'diproses' => 'Diproses',
-                        'dikirim' => 'Dikirim',
-                        'selesai' => 'Selesai',
-                        'dibatalkan' => 'Dibatalkan',
+                        Forms\Components\TextInput::make('total')
+                            ->label('Total')
+                            ->prefix('Rp')
+                            ->disabled(),
+
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'pending' => 'Menunggu',
+                                'diproses' => 'Diproses',
+                                'dikirim' => 'Dikirim',
+                                'selesai' => 'Selesai',
+                                'dibatalkan' => 'Dibatalkan',
+                            ])
+                            ->disabled(fn($record) => in_array($record?->status, ['selesai', 'dibatalkan'])),
+
+                        Forms\Components\TextInput::make('biaya_admin')
+                            ->label('Biaya Admin (1.5%)')
+                            ->prefix('Rp')
+                            ->disabled(),
+
+                        Forms\Components\TextInput::make('total_penjual')
+                            ->label('Diterima Penjual')
+                            ->prefix('Rp')
+                            ->disabled(),
+
+                        Forms\Components\DateTimePicker::make('created_at')
+                            ->label('Tanggal Pembelian')
+                            ->displayFormat('d M Y H:i')
+                            ->disabled(),
+
+                        Forms\Components\Textarea::make('catatan')
+                            ->label('Catatan')
+                            ->disabled()
+                            ->columnSpanFull(),
                     ])
-                    ->required()
-                    ->default('pending'),
+                    ->columns(2)
             ]);
     }
 
@@ -75,16 +115,10 @@ class PembelianProdukResource extends Resource
                 Tables\Columns\TextColumn::make('pembeli.name')
                     ->label('Pembeli')
                     ->searchable()
-                    ->sortable()
-                    ->toggleable(), // Admin dan penjual dapat melihat ini
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('jumlah')
                     ->label('Jumlah')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('harga_satuan')
-                    ->label('Harga Satuan')
-                    ->money('IDR')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total')
@@ -102,14 +136,24 @@ class PembelianProdukResource extends Resource
                     ]),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Tanggal Pembelian')
+                    ->label('Tanggal')
                     ->dateTime('d M Y H:i')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('biaya_admin')
+                    ->label('Biaya Admin (1.5%)')
+                    ->money('IDR')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('total_penjual')
+                    ->label('Diterima Penjual')
+                    ->money('IDR')
                     ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
+                        'pending' => 'Menunggu',
                         'diproses' => 'Diproses',
                         'dikirim' => 'Dikirim',
                         'selesai' => 'Selesai',
@@ -118,7 +162,12 @@ class PembelianProdukResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(
+                        fn(PembelianProduk $record): bool =>
+                        $record->penjual_id === Auth::id() &&
+                            !in_array($record->status, ['selesai', 'dibatalkan'])
+                    ),
                 Tables\Actions\Action::make('updateStatus')
                     ->label('Update Status')
                     ->icon('heroicon-o-arrow-path')
@@ -126,7 +175,7 @@ class PembelianProdukResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Status Baru')
                             ->options([
-                                'pending' => 'Pending',
+                                'pending' => 'Menunggu',
                                 'diproses' => 'Diproses',
                                 'dikirim' => 'Dikirim',
                                 'selesai' => 'Selesai',
@@ -135,16 +184,23 @@ class PembelianProdukResource extends Resource
                             ->required(),
                     ])
                     ->action(function (PembelianProduk $record, array $data): void {
+                        $oldStatus = $record->status;
                         $record->status = $data['status'];
                         $record->save();
+
+                        // Jika dibatalkan, kembalikan stok
+                        if ($data['status'] === 'dibatalkan' && $oldStatus !== 'dibatalkan') {
+                            $record->produk->stok += $record->jumlah;
+                            $record->produk->save();
+                        }
                     })
-                    ->visible(fn(PembelianProduk $record): bool => $record->penjual_id === Auth::id()),
+                    ->visible(
+                        fn(PembelianProduk $record): bool =>
+                        $record->penjual_id === Auth::id() &&
+                            !in_array($record->status, ['selesai', 'dibatalkan'])
+                    ),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
+            ->bulkActions([])
             ->defaultSort('created_at', 'desc');
     }
 
@@ -159,10 +215,11 @@ class PembelianProdukResource extends Resource
     {
         return [
             'index' => Pages\ListPembelianProduks::route('/'),
-            'create' => Pages\CreatePembelianProduk::route('/create'),
+            'view' => Pages\ViewPembelianProduk::route('/{record}'),
             'edit' => Pages\EditPembelianProduk::route('/{record}/edit'),
         ];
     }
+
     public static function getEloquentQuery(): Builder
     {
         // Hanya menampilkan pembelian produk yang user sebagai penjual

@@ -21,6 +21,7 @@ class PembelianSayaResource extends Resource
     protected static ?int $navigationSort = 3;
     protected static ?string $pluralModelLabel = 'Pembelian Saya';
     protected static ?string $modelLabel = 'Pembelian';
+    protected static ?string $slug = 'pembelian-saya';
 
     public static function form(Form $form): Form
     {
@@ -28,16 +29,26 @@ class PembelianSayaResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Detail Pembelian')
                     ->schema([
-                        Forms\Components\Select::make('produk_id')
-                            ->relationship('produk', 'nama')
-                            ->disabled(),
+                        Forms\Components\TextInput::make('nama')
+                            ->label('Nama Produk')
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->produk) {
+                                    $component->state($record->produk->nama);
+                                }
+                            }),
 
-                        Forms\Components\Select::make('penjual_id')
-                            ->relationship('penjual', 'name')
-                            ->label('Penjual')
-                            ->disabled(),
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nama Penjual')
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->penjual) {
+                                    $component->state($record->penjual->name);
+                                }
+                            }),
 
                         Forms\Components\TextInput::make('jumlah')
+                            ->label('Jumlah')
                             ->disabled(),
 
                         Forms\Components\TextInput::make('harga_satuan')
@@ -50,24 +61,19 @@ class PembelianSayaResource extends Resource
                             ->prefix('Rp')
                             ->disabled(),
 
-                        Forms\Components\Select::make('status')
+                        Forms\Components\TextInput::make('status')
                             ->label('Status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'diproses' => 'Diproses',
-                                'dikirim' => 'Dikirim',
-                                'selesai' => 'Selesai',
-                                'dibatalkan' => 'Dibatalkan',
-                            ])
-                            ->disabled(),
-
-                        Forms\Components\Textarea::make('catatan')
-                            ->label('Catatan')
                             ->disabled(),
 
                         Forms\Components\DateTimePicker::make('created_at')
                             ->label('Tanggal Pembelian')
+                            ->displayFormat('d M Y H:i')
                             ->disabled(),
+
+                        Forms\Components\Textarea::make('catatan')
+                            ->label('Catatan')
+                            ->disabled()
+                            ->columnSpanFull(),
                     ])
                     ->columns(2)
             ]);
@@ -76,9 +82,6 @@ class PembelianSayaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(function (Builder $query) {
-                return $query->where('pembeli_id', Auth::id());
-            })
             ->columns([
                 Tables\Columns\ImageColumn::make('produk.gambar')
                     ->label('Gambar')
@@ -122,7 +125,7 @@ class PembelianSayaResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
+                        'pending' => 'Menunggu',
                         'diproses' => 'Diproses',
                         'dikirim' => 'Dikirim',
                         'selesai' => 'Selesai',
@@ -168,7 +171,7 @@ class PembelianSayaResource extends Resource
     {
         return [
             'index' => Pages\ListPembelianSayas::route('/'),
-            'view' => Pages\ViewPembelianSaya::route('/{record}'),
+            // 'view' => Pages\ViewPembelianSaya::route('/{record}'),
         ];
     }
 

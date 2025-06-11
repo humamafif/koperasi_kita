@@ -10,7 +10,11 @@ use Illuminate\Support\Facades\Auth;
 class CreateProduk extends CreateRecord
 {
     protected static string $resource = ProdukResource::class;
-
+    protected static ?string $title = 'Tambah Produk';
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = Auth::id();

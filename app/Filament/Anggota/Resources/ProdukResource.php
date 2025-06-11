@@ -22,6 +22,9 @@ class ProdukResource extends Resource
     protected static ?string $navigationGroup = 'Produk';
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $modelLabel = 'Produk';
+    protected static ?string $pluralModelLabel = 'Produk Saya';
+    protected static ?string $recordTitleAttribute = 'nama';
 
     public static function form(Form $form): Form
     {
@@ -215,11 +218,9 @@ class ProdukResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Hanya menampilkan produk milik user yang login
         return parent::getEloquentQuery()->where('user_id', Auth::id());
     }
 
-    // Otomatis mengisi user_id dari user yang login saat membuat produk baru
     public static function getGloballySearchableAttributes(): array
     {
         return ['nama', 'deskripsi', 'kategori'];

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('pembelian_produks', function (Blueprint $table) {
@@ -22,12 +19,14 @@ return new class extends Migration
             $table->enum('status', ['pending', 'diproses', 'dikirim', 'selesai', 'dibatalkan'])->default('pending');
             $table->text('catatan')->nullable();
             $table->timestamps();
+
+            // Indeks untuk query yang lebih efisien
+            $table->index('pembeli_id');
+            $table->index('penjual_id');
+            $table->index('status');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pembelian_produks');

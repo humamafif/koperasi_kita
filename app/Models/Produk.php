@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Produk extends Model
 {
@@ -16,7 +18,8 @@ class Produk extends Model
         'stok',
         'kategori',
         'gambar',
-        'aktif'
+        'aktif',
+        'user_id',
     ];
 
     protected $casts = [
@@ -24,4 +27,19 @@ class Produk extends Model
         'stok' => 'integer',
         'aktif' => 'boolean',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function pembelian(): HasMany
+    {
+        return $this->hasMany(PembelianProduk::class);
+    }
+
+    public function getDeskripsiCleanAttribute()
+    {
+        return strip_tags($this->deskripsi);
+    }
 }

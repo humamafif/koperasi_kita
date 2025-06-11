@@ -5,6 +5,7 @@ namespace App\Filament\Anggota\Pages;
 use App\Models\PembelianProduk;
 use App\Models\Produk;
 use App\Models\User;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -37,7 +38,7 @@ class BrowseProduk extends Page implements HasTable
             ->query(
                 Produk::query()
                     ->where('aktif', true)
-                    ->where('user_id', '!=', Auth::id()) // Jangan tampilkan produk milik user sendiri
+                    ->where('user_id', '!=', Auth::id())
             )
             ->columns([
                 ImageColumn::make('gambar')
@@ -121,6 +122,11 @@ class BrowseProduk extends Page implements HasTable
                         Textarea::make('catatan')
                             ->label('Catatan')
                             ->maxLength(500),
+
+                        Placeholder::make('info_biaya_admin')
+                            ->label('Informasi Biaya')
+                            ->content('Setiap pembelian akan dikenakan biaya administrasi sebesar 1.5% dari total transaksi')
+                            ->extraAttributes(['class' => 'text-sm text-gray-500']),
                     ])
                     ->action(function (Produk $record, array $data) {
                         // Periksa apakah stok mencukupi
@@ -133,6 +139,10 @@ class BrowseProduk extends Page implements HasTable
                             return;
                         }
 
+                        $total = $record->harga * $data['jumlah'];
+                        $biayaAdmin = $total * 0.015;
+                        $totalPenjual = $total - $biayaAdmin;
+
                         // Buat pembelian baru
                         $pembelian = PembelianProduk::create([
                             'produk_id' => $record->id,
@@ -140,7 +150,9 @@ class BrowseProduk extends Page implements HasTable
                             'penjual_id' => $record->user_id,
                             'jumlah' => $data['jumlah'],
                             'harga_satuan' => $record->harga,
-                            'total' => $record->harga * $data['jumlah'],
+                            'total' => $total,
+                            'biaya_admin' => $biayaAdmin,
+                            'total_penjual' => $totalPenjual,
                             'status' => 'pending',
                             'catatan' => $data['catatan'] ?? null,
                         ]);

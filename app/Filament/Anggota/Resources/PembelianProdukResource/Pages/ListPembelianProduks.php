@@ -1,10 +1,13 @@
 <?php
+// filepath: d:\Development\menpro\koperasi_kita\app\Filament\Anggota\Resources\PembelianProdukResource\Pages\ListPembelianProduks.php
 
 namespace App\Filament\Anggota\Resources\PembelianProdukResource\Pages;
 
 use App\Filament\Anggota\Resources\PembelianProdukResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Components\Tab;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListPembelianProduks extends ListRecords
 {
@@ -12,8 +15,45 @@ class ListPembelianProduks extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        return [];
+    }
+
+    public function getTabs(): array
+    {
         return [
-            Actions\CreateAction::make(),
+            'semua' => Tab::make('Semua')
+                ->badge($this->getTabBadgeCount('semua')),
+            'pending' => Tab::make('Menunggu')
+                ->badge($this->getTabBadgeCount('pending'))
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'pending')),
+            'diproses' => Tab::make('Diproses')
+                ->badge($this->getTabBadgeCount('diproses'))
+                ->badgeColor('primary')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'diproses')),
+            'dikirim' => Tab::make('Dikirim')
+                ->badge($this->getTabBadgeCount('dikirim'))
+                ->badgeColor('info')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'dikirim')),
+            'selesai' => Tab::make('Selesai')
+                ->badge($this->getTabBadgeCount('selesai'))
+                ->badgeColor('success')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'selesai')),
+            'dibatalkan' => Tab::make('Dibatalkan')
+                ->badge($this->getTabBadgeCount('dibatalkan'))
+                ->badgeColor('danger')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'dibatalkan')),
         ];
+    }
+
+    private function getTabBadgeCount(string $tab): int
+    {
+        $query = $this->getTableQuery();
+
+        if ($tab === 'semua') {
+            return $query->count();
+        }
+
+        return $query->where('status', $tab)->count();
     }
 }
