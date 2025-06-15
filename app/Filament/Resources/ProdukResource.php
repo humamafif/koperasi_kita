@@ -8,18 +8,24 @@ use App\Models\Produk;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ProdukResource extends Resource
 {
     protected static ?string $model = Produk::class;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationLabel = 'Produk Koperasi';
-    protected static ?string $navigationGroup = 'Manajemen Produk';
+    protected static ?string $navigationLabel = 'Produk Saya';
+    protected static ?string $navigationGroup = 'Produk';
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $modelLabel = 'Produk';
+    protected static ?string $pluralModelLabel = 'Produk Saya';
+    protected static ?string $recordTitleAttribute = 'nama';
 
     public static function form(Form $form): Form
     {
@@ -47,6 +53,7 @@ class ProdukResource extends Resource
                         Forms\Components\TextInput::make('harga')
                             ->label('Harga')
                             ->required()
+                            ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->numeric()
                             ->prefix('Rp'),
 
@@ -80,7 +87,6 @@ class ProdukResource extends Resource
                                 'underline',
                                 'bulletList',
                                 'orderedList',
-                                'link',
                             ])
                             ->columnSpanFull(),
 
@@ -112,6 +118,15 @@ class ProdukResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('deskripsi')
+                    ->label('Deskripsi')
+                    ->formatStateUsing(fn($state) => strip_tags($state))
+                    ->limit(30)
+                    ->tooltip(function ($record) {
+                        return strip_tags($record->deskripsi);
+                    })
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('harga')
                     ->label('Harga')
                     ->money('IDR')
@@ -125,12 +140,6 @@ class ProdukResource extends Resource
                     ->label('Status')
                     ->boolean()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Terakhir Diupdate')
-                    ->dateTime('d M Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('kategori')
@@ -141,8 +150,7 @@ class ProdukResource extends Resource
                         'Makanan' => 'Makanan',
                         'Minuman' => 'Minuman',
                         'Lainnya' => 'Lainnya',
-                    ])
-                    ->multiple(),
+                    ]),
 
                 Tables\Filters\SelectFilter::make('aktif')
                     ->label('Status')
@@ -176,7 +184,7 @@ class ProdukResource extends Resource
                                 ->required()
                                 ->minValue(0),
                         ])
-                        ->action(function (array $data, Collection $records): void {
+                        ->action(function (array $data, \Illuminate\Database\Eloquent\Collection $records): void {
                             foreach ($records as $record) {
                                 if ($data['action'] === 'add') {
                                     $record->stok += $data['amount'];
@@ -188,19 +196,9 @@ class ProdukResource extends Resource
                                 $record->save();
                             }
                         }),
-                    Tables\Actions\BulkAction::make('toggleActive')
-                        ->label('Ubah Status')
-                        ->icon('heroicon-o-eye')
-                        ->requiresConfirmation()
-                        ->action(function (Collection $records): void {
-                            foreach ($records as $record) {
-                                $record->aktif = !$record->aktif;
-                                $record->save();
-                            }
-                        }),
                 ]),
             ])
-            ->defaultSort('updated_at', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array
@@ -217,5 +215,16 @@ class ProdukResource extends Resource
             'create' => Pages\CreateProduk::route('/create'),
             'edit' => Pages\EditProduk::route('/{record}/edit'),
         ];
+    }
+
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('user_id', Auth::id());
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nama', 'deskripsi', 'kategori'];
     }
 }
