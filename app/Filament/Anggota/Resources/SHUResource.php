@@ -4,10 +4,12 @@ namespace App\Filament\Anggota\Resources;
 
 use App\Filament\Anggota\Resources\SHUResource\Pages;
 use App\Models\SHUDistribution;
+use App\Services\SHUClaimService;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +19,18 @@ class SHUResource extends Resource
     protected static ?string $model = SHUDistribution::class;
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'SHU Saya';
+    protected static ?string $pluralModelLabel = 'SHU Saya';
     protected static ?string $navigationGroup = 'Keuangan';
     protected static ?int $navigationSort = 5;
+    protected static ?string $slug = 'shu';
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()->hasRole('anggota_tetap');
+    }
 
     public static function getEloquentQuery(): Builder
     {
-        // Hanya tampilkan SHU milik anggota yang login
         return parent::getEloquentQuery()
             ->where('user_id', Auth::id())
             ->where('status', 'dibagikan');
@@ -51,13 +59,21 @@ class SHUResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
-                    ->colors([
-                        'success' => 'dibagikan',
-                        'warning' => 'pending',
-                        'danger' => 'ditolak',
-                    ]),
+                Tables\Columns\IconColumn::make('is_claimed')
+                    ->label('Status Pengambilan')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('warning')
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('claimed_at')
+                    ->label('Waktu Pengambilan')
+                    ->dateTime('d M Y H:i')
+                    ->sortable()
+                    ->placeholder('-')
+                    ->visible(fn($record): bool => $record && $record->is_claimed),
 
                 Tables\Columns\TextColumn::make('tanggal_distribusi')
                     ->label('Tanggal Distribusi')
@@ -68,10 +84,71 @@ class SHUResource extends Resource
                 Tables\Filters\SelectFilter::make('tahun')
                     ->options(
                         fn() => SHUDistribution::where('user_id', Auth::id())
+                            ->where('status', 'dibagikan')
                             ->distinct()
                             ->pluck('tahun', 'tahun')
                             ->toArray()
                     ),
+                Tables\Filters\Filter::make('is_claimed')
+                    ->label('Status Pengambilan')
+                    ->form([
+                        Forms\Components\Select::make('status_ambil')
+                            ->label('Status Pengambilan')
+                            ->options([
+                                'sudah' => 'Sudah Diambil',
+                                'belum' => 'Belum Diambil',
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                isset($data['status_ambil']) && $data['status_ambil'] === 'sudah',
+                                fn(Builder $query): Builder => $query->where('is_claimed', true),
+                            )
+                            ->when(
+                                isset($data['status_ambil']) && $data['status_ambil'] === 'belum',
+                                fn(Builder $query): Builder => $query->where('is_claimed', false),
+                            );
+                    })
+            ])
+            ->actions([
+                Tables\Actions\Action::make('ambilDana')
+                    ->label('Ambil Dana')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn(SHUDistribution $record): bool => $record && !$record->is_claimed)
+                    ->requiresConfirmation()
+                    ->modalHeading('Ambil Dana SHU')
+                    ->modalDescription(
+                        fn(SHUDistribution $record): string =>
+                        "Anda akan mengambil dana SHU sebesar Rp " . number_format($record->jumlah_shu, 0, ',', '.') .
+                            " untuk tahun " . $record->tahun . ". Dana akan ditambahkan ke saldo Anda."
+                    )
+                    ->modalSubmitActionLabel('Ya, Ambil Dana')
+                    ->modalIcon('heroicon-o-banknotes')
+                    ->action(function (SHUDistribution $record, Tables\Actions\Action $action) {
+                        $service = new SHUClaimService();
+                        $result = $service->claimSHU($record);
+
+                        if ($result['success']) {
+                            Notification::make()
+                                ->title('Dana SHU Berhasil Diambil')
+                                ->body("Dana SHU sebesar Rp " . number_format($result['amount'], 0, ',', '.') .
+                                    " telah ditambahkan ke saldo Anda. Saldo sekarang: Rp " .
+                                    number_format($result['new_balance'], 0, ',', '.'))
+                                ->success()
+                                ->send();
+
+                            // Refresh halaman dengan cara redirect ke halaman yang sama
+                            redirect(request()->header('Referer'));
+                        } else {
+                            Notification::make()
+                                ->title('Gagal Mengambil Dana')
+                                ->body($result['message'])
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->defaultSort('tahun', 'desc');
     }
@@ -94,8 +171,7 @@ class SHUResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSHUS::route('/'),
-            'view' => Pages\ViewSHU::route('/{record}'),
+            'index' => Pages\ListSHU::route('/'),
         ];
     }
 }

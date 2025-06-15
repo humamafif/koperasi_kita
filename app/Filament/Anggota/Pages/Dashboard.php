@@ -54,6 +54,8 @@ class Dashboard extends BaseDashboard
         if (Auth::check() && Auth::user()->hasRole('anggota_tetap')) {
             $widgets[] = \App\Filament\Anggota\Widgets\SimpananStatsWidget::class;
             $widgets[] = \App\Filament\Anggota\Widgets\PinjamanStatsWidget::class;
+            $widgets[] = \App\Filament\Anggota\Widgets\SHUStatsWidget::class;
+            $widgets[] = \App\Filament\Anggota\Widgets\SaldoWidget::class;
         }
 
         return $widgets;

@@ -6,7 +6,7 @@ use App\Filament\Anggota\Resources\SHUResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListSHUS extends ListRecords
+class ListSHU extends ListRecords
 {
     protected static string $resource = SHUResource::class;
 
