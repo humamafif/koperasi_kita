@@ -11,6 +11,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -58,23 +59,31 @@ class SHUDistributionResource extends Resource
                             ->label('Biaya Operasional')
                             ->required()
                             ->numeric()
-                            ->prefix('Rp'),
+                            ->prefix('Rp')
+                            ->stripCharacters(',')
+                            ->mask(RawJs::make('$money($input)')),
 
                         Forms\Components\TextInput::make('pajak')
                             ->label('Pajak')
                             ->required()
                             ->numeric()
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters(',')
                             ->prefix('Rp'),
 
                         Forms\Components\TextInput::make('dana_cadangan')
                             ->label('Dana Cadangan')
                             ->required()
                             ->numeric()
+                            ->stripCharacters(',')
+                            ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp'),
 
                         Forms\Components\TextInput::make('biaya_lainnya')
                             ->label('Biaya Lainnya')
                             ->numeric()
+                            ->stripCharacters(',')
+                            ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp'),
 
                         Forms\Components\Textarea::make('keterangan_biaya')
@@ -92,6 +101,8 @@ class SHUDistributionResource extends Resource
                             ->disabled()
                             ->dehydrated()
                             ->prefix('Rp')
+                            ->stripCharacters(',')
+                            ->mask(RawJs::make('$money($input)'))
                             ->default(0),
 
                         Forms\Components\TextInput::make('total_shu')
@@ -99,6 +110,8 @@ class SHUDistributionResource extends Resource
                             ->disabled()
                             ->dehydrated()
                             ->prefix('Rp')
+                            ->stripCharacters(',')
+                            ->mask(RawJs::make('$money($input)'))
                             ->default(0),
                     ])
                     ->columns(2),

@@ -16,8 +16,8 @@ class CreateSHUDistribution extends CreateRecord
 {
     protected static string $resource = SHUDistributionResource::class;
     protected static ?string $title = 'Hitung SHU Baru';
+    protected static bool $canCreateAnother = false;
 
-    // Tambahkan variabel untuk menyimpan form state
     public $formState = [];
     public $saldoKoperasi = 0;
 
@@ -192,11 +192,6 @@ class CreateSHUDistribution extends CreateRecord
                 ->body("Total SHU: Rp " . number_format($calculatedTotalSHU, 0, ',', '.') . " didistribusikan ke " . count($result['distribusi']) . " anggota")
                 ->success()
                 ->send();
-
-            // PENTING: Kita tidak memanggil parent::create() disini
-            // untuk menghindari pembuatan record default Filament
-
-            // Redirect setelah selesai
             $this->redirect($this->getResource()::getUrl('index'));
         } catch (\Exception $e) {
             DB::rollBack();
@@ -211,42 +206,11 @@ class CreateSHUDistribution extends CreateRecord
                 ->send();
         }
     }
-    // Tambahkan method cancel
+
     protected function cancel()
     {
         return [];
     }
-
-    // protected function afterCreate(): void
-    // {
-    //     // Ambil data form saat ini
-    //     $data = $this->formState;
-
-    //     // Jika data kosong, ambil dari form
-    //     if (empty($data)) {
-    //         $data = $this->form->getState();
-    //     }
-
-    //     $tahun = (int) $data['tahun'];
-    //     $totalSHU = (float) $data['total_shu'];
-
-    //     // Hitung dan simpan SHU anggota menggunakan service
-    //     $result = (new SHUCalculationService)->calculateSHU($tahun, $totalSHU);
-
-    //     if ($result['success']) {
-    //         Notification::make()
-    //             ->title("Perhitungan SHU untuk tahun $tahun berhasil")
-    //             ->body("Total SHU: Rp " . number_format($totalSHU, 0, ',', '.') . " didistribusikan ke " . count($result['distribusi']) . " anggota")
-    //             ->success()
-    //             ->send();
-    //     } else {
-    //         Notification::make()
-    //             ->title("Perhitungan SHU gagal")
-    //             ->body($result['message'])
-    //             ->danger()
-    //             ->send();
-    //     }
-    // }
 
     protected function getRedirectUrl(): string
     {

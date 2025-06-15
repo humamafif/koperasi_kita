@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Controllers\RegisterController;
 use App\Http\Middleware\CheckAnggotaTetapStatus;
 use App\Http\Middleware\EnsureUserIsAnggota;
 use App\Models\PendaftaranAnggotaTetap;
@@ -30,6 +31,8 @@ class AnggotaPanelProvider extends PanelProvider
             ->id('anggota')
             ->path('anggota')
             ->login()
+            ->registration()
+            ->font('Aileron')
             ->colors([
                 'primary' => '#3E5368',
             ])
@@ -43,10 +46,12 @@ class AnggotaPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Anggota/Widgets'), for: 'App\\Filament\\Anggota\\Widgets')
             ->widgets([
                 // Widgets\AccountWidget::class,
+                \App\Filament\Anggota\Widgets\SaldoWidget::class,
                 \App\Filament\Anggota\Widgets\PinjamanStatsWidget::class,
                 \App\Filament\Anggota\Widgets\SimpananStatsWidget::class,
                 \App\Filament\Anggota\Widgets\ProdukStatsWidget::class,
                 \App\Filament\Anggota\Widgets\TagihanStatsWidget::class,
+                \App\Filament\Anggota\Widgets\SHUStatsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
