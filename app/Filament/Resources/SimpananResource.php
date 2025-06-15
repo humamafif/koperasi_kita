@@ -16,11 +16,17 @@ use Illuminate\Support\Facades\Auth;
 
 class SimpananResource extends Resource
 {
-    protected static ?string $model = Simpanan::class;
+protected static ?string $model = Simpanan::class;
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Simpanan';
     protected static ?string $pluralModelLabel = 'simpanan';
-    protected static ?string $navigationGroup = 'Keuangan';
+    protected static ?string $navigationGroup = 'Simpanan & Pinjaman';
+    protected static ?int $navigationSort = 1;
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
     public static function form(Form $form): Form
     {
@@ -35,8 +41,9 @@ class SimpananResource extends Resource
                             ->preload()
                             ->required(),
 
-                        Forms\Components\TextInput::make('user.email')
-                            ->label('Email')
+                        Forms\Components\Select::make('email')
+                            ->label('Email Anggota')
+                            ->relationship('user', 'email')
                             ->disabled()
                             ->dehydrated(false),
                     ])
@@ -64,19 +71,17 @@ class SimpananResource extends Resource
                             ->required()
                             ->default(now()),
 
-                        Forms\Components\FileUpload::make('bukti_pembayaran')
+                        Forms\Components\TextInput::make('bukti_pembayaran')
                             ->label('Bukti Pembayaran')
-                            ->image()
-                            ->directory('bukti-pembayaran/simpanan')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->required()
-                            ->imageEditor() // Tambahkan editor gambar
-                            ->imagePreviewHeight('250') // Atur tinggi preview
-                            ->panelAspectRatio('16:9') // Aspek rasio panel
-                            ->panelLayout('integrated') // Layout panel terintegrasi
-                            ->openable() // Bisa dibuka dalam modal
-                            ->downloadable(), // Bisa didownload
+                            ->prefix('storage/')
+                            ->suffixAction(
+                                Forms\Components\Actions\Action::make('view_image')
+                                    ->icon('heroicon-o-photo')
+                                    ->url(fn($record) => $record && $record->bukti_pembayaran
+                                        ? asset('storage/' . $record->bukti_pembayaran)
+                                        : null, true)
+                                    ->visible(fn($record) => $record && $record->bukti_pembayaran)
+                            )
                     ])
                     ->columns(2),
 
@@ -125,9 +130,6 @@ class SimpananResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
-                // Tables\Columns\TextColumn::make('bukti_pembayaran')
-                //     ->label('Path Bukti'),
-
                 Tables\Columns\ImageColumn::make('bukti_pembayaran')
                     ->label('Bukti Pembayaran')
                     ->disk('public')
@@ -150,6 +152,8 @@ class SimpananResource extends Resource
                         'success' => 'disetujui',
                         'danger' => 'ditolak',
                     ]),
+                Tables\Columns\TextColumn::make('keterangan')
+                    ->label('Keterangan')
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('jenis')
@@ -199,7 +203,7 @@ class SimpananResource extends Resource
                         ]);
                     }),
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -220,8 +224,8 @@ class SimpananResource extends Resource
     {
         return [
             'index' => Pages\ListSimpanans::route('/'),
-            'create' => Pages\CreateSimpanan::route('/create'),
-            'edit' => Pages\EditSimpanan::route('/{record}/edit'),
+            // 'create' => Pages\CreateSimpanan::route('/create'),
+            // 'edit' => Pages\EditSimpanan::route('/{record}/edit'),
         ];
     }
 }

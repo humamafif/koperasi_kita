@@ -8,7 +8,9 @@ use App\Models\Produk;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -53,6 +55,7 @@ class ProdukResource extends Resource
                             ->label('Harga')
                             ->required()
                             ->numeric()
+                            ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->prefix('Rp'),
 
                         Forms\Components\TextInput::make('stok')
@@ -99,6 +102,14 @@ class ProdukResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading("Tidak ada produk")
+            ->emptyStateDescription("Anda belum memiliki produk. Silakan buat produk baru untuk memulai.")
+            ->emptyStateActions([
+                Action::make('Tambah Produk')
+                    ->url("produks/create")
+                    ->icon('heroicon-m-plus')
+                    ->button(),
+            ])
             ->columns([
                 Tables\Columns\ImageColumn::make('gambar')
                     ->label('Gambar')

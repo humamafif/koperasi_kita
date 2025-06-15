@@ -8,6 +8,7 @@ use App\Models\Simpanan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,6 +56,7 @@ class SimpananResource extends Resource
                             ->required()
                             ->numeric()
                             ->prefix('Rp')
+                            ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->default(function (Forms\Get $get) {
                                 return $get('jenis') === 'wajib' ? 50000 : null;
                             })
@@ -116,6 +118,18 @@ class SimpananResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
+                Tables\Columns\ImageColumn::make('bukti_pembayaran')
+                    ->label('Bukti Pembayaran')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->size(60)
+                    ->square()
+                    ->extraImgAttributes([
+                        'alt' => 'Bukti Pembayaran',
+                        'loading' => 'lazy',
+                    ])
+                    ->wrap(),
+
                 Tables\Columns\TextColumn::make('tanggal_pembayaran')
                     ->label('Tanggal Pembayaran')
                     ->date('d M Y')
@@ -130,7 +144,6 @@ class SimpananResource extends Resource
 
                 Tables\Columns\TextColumn::make('keterangan')
                     ->label('Keterangan')
-                    ->visible(fn(?Simpanan $record): bool => $record?->status === 'ditolak'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('jenis')
@@ -148,10 +161,9 @@ class SimpananResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\ViewAction::make(),
             ])
             ->modifyQueryUsing(function (Builder $query) {
-                // Hanya tampilkan simpanan milik anggota yang login
                 return $query->where('user_id', Auth::id());
             })
             ->defaultSort('tanggal_pembayaran', 'desc');
@@ -169,8 +181,8 @@ class SimpananResource extends Resource
         return [
             'index' => Pages\ListSimpanans::route('/'),
             'create' => Pages\CreateSimpanan::route('/create'),
-            'edit' => Pages\EditSimpanan::route('/{record}/edit'),
-            'view' => Pages\ViewSimpanan::route('/{record}'),
+            // 'edit' => Pages\EditSimpanan::route('/{record}/edit'),
+            // 'view' => Pages\ViewSimpanan::route('/{record}'),
         ];
     }
 }

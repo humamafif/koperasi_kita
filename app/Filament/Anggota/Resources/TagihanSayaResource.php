@@ -26,6 +26,39 @@ class TagihanSayaResource extends Resource
     protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'tagihan-saya';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $userId = Auth::id();
+
+        $belumBayar = TagihanAnggota::where('user_id', $userId)
+            ->where('status', 'belum_bayar')
+            ->count();
+
+        $menungguVerifikasi = TagihanAnggota::where('user_id', $userId)
+            ->where('status', 'menunggu_verifikasi')
+            ->count();
+
+        if ($belumBayar === 0 && $menungguVerifikasi === 0) {
+            return null;
+        }
+
+        return "{$belumBayar} 🔴 | {$menungguVerifikasi} 🟡";
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $userId = Auth::id();
+
+        if (TagihanAnggota::where('user_id', $userId)->where('status', 'belum_bayar')->exists()) {
+            return 'danger';
+        }
+
+        if (TagihanAnggota::where('user_id', $userId)->where('status', 'menunggu_verifikasi')->exists()) {
+            return 'warning';
+        }
+        return 'success';
+    }
+
     public static function canAccess(): bool
     {
         return Auth::user()->hasRole('anggota_tetap');
@@ -255,9 +288,6 @@ class TagihanSayaResource extends Resource
                         );
                     }),
             ])
-
-
-
             ->actions([
                 // Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('bayar')

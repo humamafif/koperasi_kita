@@ -16,9 +16,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class TenorPinjamanResource extends Resource
 {
     protected static ?string $model = TenorPinjaman::class;
+    protected static ?string $navigationGroup = 'Simpanan & Pinjaman';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationLabel = 'Tenor & Bunga Pinjaman';
     protected static ?string $pluralModelLabel = 'tenor & bunga pinjaman';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -85,18 +87,6 @@ class TenorPinjamanResource extends Resource
                     ->label('Status')
                     ->boolean()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime('d M Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Diperbarui')
-                    ->dateTime('d M Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('aktif')

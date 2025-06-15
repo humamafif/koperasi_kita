@@ -66,4 +66,37 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pinjaman::class);
     }
+
+    public function produks()
+    {
+        return $this->hasMany(Produk::class);
+    }
+
+    public function pembelianSebagaiPembeli()
+    {
+        return $this->hasMany(PembelianProduk::class, 'pembeli_id');
+    }
+
+    public function pembelianSebagaiPenjual()
+    {
+        return $this->hasMany(PembelianProduk::class, 'penjual_id');
+    }
+    public function tagihan()
+    {
+        return $this->hasMany(TagihanAnggota::class);
+    }
+    public function shuDistributions()
+    {
+        return $this->hasMany(SHUDistribution::class);
+    }
+
+    public function saldoAnggota()
+    {
+        return $this->hasOne(SaldoAnggota::class);
+    }
+
+    public function shuPengambilans()
+    {
+        return $this->hasMany(SHUPengambilan::class);
+    }
 }

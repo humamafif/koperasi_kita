@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class SimpananStatsWidget extends BaseWidget
 {
+    protected static ?int $sort = 4;
     public static function canView(): bool
     {
         return Auth::user()->hasRole('anggota_tetap');

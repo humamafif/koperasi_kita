@@ -7,20 +7,37 @@ use App\Filament\Resources\PinjamanResource\RelationManagers;
 use App\Models\Pinjaman;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PinjamanResource extends Resource
 {
     protected static ?string $model = Pinjaman::class;
+    protected static ?string $navigationGroup = 'Simpanan & Pinjaman';
+    protected static ?int $navigationGroupSort = 1;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Persetujuan Pinjaman';
     protected static ?string $pluralModelLabel = 'pinjaman';
     protected static ?string $slug = 'pinjaman';
+    protected static ?int $navigationSort = 2;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = Pinjaman::where('status', "pending")->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function canCreate(): bool
     {
         return false;
@@ -31,13 +48,22 @@ class PinjamanResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Detail Peminjam')
                     ->schema([
-                        Forms\Components\TextInput::make('user.name')
+                        Forms\Components\TextInput::make('name')
                             ->label('Nama Anggota')
-                            ->disabled(),
-
-                        Forms\Components\TextInput::make('user.email')
-                            ->label('Email')
-                            ->disabled(),
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->user) {
+                                    $component->state($record->user->name);
+                                }
+                            }),
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email Anggota')
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->user) {
+                                    $component->state($record->user->email);
+                                }
+                            }),
                     ])
                     ->columns(2),
 
@@ -48,14 +74,23 @@ class PinjamanResource extends Resource
                             ->disabled()
                             ->prefix('Rp'),
 
-                        Forms\Components\TextInput::make('tenorPinjaman.nama')
-                            ->label('Tenor')
-                            ->disabled(),
-
-                        Forms\Components\TextInput::make('tenorPinjaman.bunga')
-                            ->label('Bunga')
+                        Forms\Components\TextInput::make('nama')
+                            ->label('Tenor Pinjaman')
                             ->disabled()
-                            ->suffix('%'),
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->tenorPinjaman) {
+                                    $component->state($record->tenorPinjaman->nama);
+                                }
+                            }),
+                        Forms\Components\TextInput::make('bunga')
+                            ->label('Margin Pinjaman')
+                            ->disabled()
+                            ->suffix('%')
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->tenorPinjaman) {
+                                    $component->state($record->tenorPinjaman->bunga);
+                                }
+                            }),
 
                         Forms\Components\TextInput::make('tujuan')
                             ->label('Tujuan Pinjaman')
@@ -145,6 +180,10 @@ class PinjamanResource extends Resource
                         'success' => 'disetujui',
                         'danger' => 'ditolak',
                     ]),
+
+                Tables\Columns\TextColumn::make('alasan_penolakan')
+                    ->label('Alasan Penolakan')
+
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -161,13 +200,92 @@ class PinjamanResource extends Resource
                     ->color('success')
                     ->visible(fn(Pinjaman $record) => $record->status === 'pending')
                     ->action(function (Pinjaman $record) {
-                        $record->update([
-                            'status' => 'disetujui',
-                            'tanggal_persetujuan' => now(),
-                            'disetujui_oleh' => Auth::user()->name,
-                        ]);
-                    }),
+                        // Begin transaction
+                        DB::beginTransaction();
 
+                        try {
+                            // Update status pinjaman
+                            $record->update([
+                                'status' => 'disetujui',
+                                'tanggal_persetujuan' => now(),
+                                'disetujui_oleh' => Auth::user()->name,
+                            ]);
+
+                            // Update status riwayat transaksi
+                            \App\Models\RiwayatTransaksi::where('referensi_id', $record->id)
+                                ->where('referensi_tipe', 'App\\Models\\Pinjaman')
+                                ->where('jenis_transaksi', 'pinjaman')
+                                ->where('status', 'pending')
+                                ->update([
+                                    'status' => 'disetujui',
+                                    'keterangan' => 'Pinjaman disetujui sebesar Rp ' . number_format($record->jumlah, 0, ',', '.')
+                                ]);
+
+                            // Hitung ulang financials
+                            if (!$record->tenorPinjaman) {
+                                throw new \Exception("Tenor not found for loan #{$record->id}");
+                            }
+
+                            $tenor = $record->tenorPinjaman->durasi;
+                            $bunga = $record->tenorPinjaman->bunga;
+                            $jumlah = $record->jumlah;
+
+                            $totalBunga = $jumlah * $bunga / 100 * ($tenor / 12);
+                            $pokok = $jumlah / $tenor;
+                            $bungaPerBulan = ($jumlah * $bunga / 100) / 12;
+                            $angsuran = $pokok + $bungaPerBulan;
+                            $record->save();
+
+                            // Buat tagihan angsuran pinjaman
+                            $startDate = $record->tanggal_persetujuan;
+
+                            // Hapus tagihan lama jika ada
+                            \App\Models\TagihanAnggota::where('user_id', $record->user_id)
+                                ->where('jenis_tagihan', 'angsuran_pinjaman')
+                                ->where('pinjaman_id', $record->id)
+                                ->delete();
+
+                            for ($i = 1; $i <= $tenor; $i++) {
+                                $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i)->setDay(10);
+                                $periode = $dueDate->format('Y-m');
+
+                                \App\Models\TagihanAnggota::create([
+                                    'user_id' => $record->user_id,
+                                    'jenis_tagihan' => 'angsuran_pinjaman',
+                                    'jumlah' => $record->angsuran_per_bulan,
+                                    'tanggal_jatuh_tempo' => $dueDate,
+                                    'status' => 'belum_bayar',
+                                    'pinjaman_id' => $record->id,
+                                    'periode' => $periode,
+                                    'keterangan' => "Angsuran pinjaman ke-{$i} dari {$tenor} bulan",
+                                ]);
+                            }
+
+                            // Kirim notifikasi
+                            $record->user->notify(new \App\Notifications\PinjamanStatusUpdated($record));
+
+                            DB::commit();
+
+                            // Tampilkan notifikasi
+                            Notification::make()
+                                ->title('Pinjaman Disetujui')
+                                ->body("Pinjaman berhasil disetujui dan tagihan angsuran telah dibuat")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+
+                            // Log error
+                            \Illuminate\Support\Facades\Log::error("Error approving loan: " . $e->getMessage());
+
+                            // Tampilkan notifikasi error
+                            Notification::make()
+                                ->title('Gagal Menyetujui Pinjaman')
+                                ->body("Terjadi kesalahan: " . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('reject')
                     ->label('Tolak')
                     ->icon('heroicon-o-x-mark')
@@ -185,10 +303,18 @@ class PinjamanResource extends Resource
                             'tanggal_persetujuan' => now(),
                             'disetujui_oleh' => Auth::user()->name,
                         ]);
+
+                        \App\Models\RiwayatTransaksi::where('referensi_id', $record->id)
+                            ->where('referensi_tipe', 'App\\Models\\Pinjaman')
+                            ->where('jenis_transaksi', 'pinjaman')
+                            ->where('status', 'pending')
+                            ->update([
+                                'status' => 'ditolak',
+                                'keterangan' => 'Pinjaman ditolak dengan alasan: ' . $data['alasan_penolakan']
+                            ]);
                     }),
 
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
             ]);
     }
 
@@ -203,8 +329,6 @@ class PinjamanResource extends Resource
     {
         return [
             'index' => Pages\ListPinjamen::route('/'),
-            'create' => Pages\CreatePinjaman::route('/create'),
-            'edit' => Pages\EditPinjaman::route('/{record}/edit'),
         ];
     }
 }

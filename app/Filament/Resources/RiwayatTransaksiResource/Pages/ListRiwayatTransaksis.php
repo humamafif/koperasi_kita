@@ -9,11 +9,4 @@ use Filament\Resources\Pages\ListRecords;
 class ListRiwayatTransaksis extends ListRecords
 {
     protected static string $resource = RiwayatTransaksiResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
 }

@@ -5,29 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pinjaman extends Model
 {
     use HasFactory;
-    protected  $table = 'pinjamans';
+
+    protected $table = 'pinjamans';
+
     protected $fillable = [
         'user_id',
+        'tenor_pinjaman_id',
         'jumlah',
-        'tenor_id',
         'tujuan',
-        'keterangan',
         'status',
-        'alasan_penolakan',
+        'keterangan',
         'tanggal_pengajuan',
         'tanggal_persetujuan',
         'disetujui_oleh',
+        'alasan_penolakan',
+        'angsuran_per_bulan',
+        'total_bunga',
     ];
 
     protected $casts = [
-        'jumlah' => 'decimal:2',
         'tanggal_pengajuan' => 'date',
         'tanggal_persetujuan' => 'date',
+        'jumlah' => 'decimal:2',
+        'angsuran_per_bulan' => 'decimal:2',
+        'total_bunga' => 'decimal:2',
     ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -35,11 +43,20 @@ class Pinjaman extends Model
 
     public function tenorPinjaman(): BelongsTo
     {
-        return $this->belongsTo(TenorPinjaman::class, 'tenor_id');
+        return $this->belongsTo(TenorPinjaman::class, 'tenor_pinjaman_id');
+    }
+
+    public function tagihan(): HasMany
+    {
+        return $this->hasMany(TagihanAnggota::class, 'pinjaman_id');
     }
 
     public function getAngsuranPerBulanAttribute()
     {
+        if ($this->attributes['angsuran_per_bulan'] ?? null) {
+            return $this->attributes['angsuran_per_bulan'];
+        }
+
         if (!$this->tenorPinjaman) {
             return 0;
         }
@@ -48,7 +65,7 @@ class Pinjaman extends Model
         $bunga = $this->tenorPinjaman->bunga;
 
         $pokok = $this->jumlah / $tenor;
-        $bungaPerBulan = ($this->jumlah * $bunga / 100) / $tenor;
+        $bungaPerBulan = ($this->jumlah * $bunga / 100) / 12;
 
         return $pokok + $bungaPerBulan;
     }
@@ -65,6 +82,9 @@ class Pinjaman extends Model
 
     public function getTotalBungaAttribute()
     {
+        if ($this->attributes['total_bunga'] ?? null) {
+            return $this->attributes['total_bunga'];
+        }
         if (!$this->tenorPinjaman) {
             return 0;
         }

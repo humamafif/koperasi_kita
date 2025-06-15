@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use App\Filament\Widgets\UserStatsWidget;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -18,7 +19,14 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
+    protected static ?string $navigationLabel = 'Daftar Pengguna';
+    protected static ?string $modelLabel = 'Daftar Pengguna';
+    protected static ?string $pluralLabel = 'Daftar Pengguna';
+
+    protected static ?int $navigationSort = 1;
+
+    
 
     public static function form(Form $form): Form
     {

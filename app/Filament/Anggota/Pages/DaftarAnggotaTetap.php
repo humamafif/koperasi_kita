@@ -71,8 +71,7 @@ class DaftarAnggotaTetap extends Page
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Informasi Pendaftaran Anggota Tetap')
-                    ->description('Silahkan lengkapi data di bawah ini untuk menjadi anggota tetap. Setelah pendaftaran disetujui, Anda dapat melakukan simpanan wajib.')
+                Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('nik')
                             ->label('NIK')

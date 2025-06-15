@@ -25,6 +25,11 @@ class RiwayatTransaksi extends Page implements HasTable
 
     protected static string $view = 'filament.anggota.pages.riwayat-transaksi';
 
+    public static function canAccess(): bool
+    {
+        return Auth::user()->hasRole('anggota_tetap');
+    }
+
     public function table(Table $table): Table
     {
         return $table

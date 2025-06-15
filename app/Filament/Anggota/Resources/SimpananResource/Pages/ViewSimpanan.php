@@ -9,4 +9,5 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewSimpanan extends ViewRecord
 {
     protected static string $resource = SimpananResource::class;
+    protected static ?string $title = 'Detail Simpanan';
 }

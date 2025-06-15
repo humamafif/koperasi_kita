@@ -10,6 +10,7 @@ use App\Models\TenorPinjaman;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,10 +45,8 @@ class PinjamanResource extends Resource
                             ->label('Jumlah Pinjaman')
                             ->required()
                             ->numeric()
+                            ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->prefix('Rp')
-                            ->minValue(1000000)
-                            ->maxValue(50000000)
-                            ->hint('Minimal Rp 1.000.000, Maksimal Rp 50.000.000')
                             ->live(),
 
                         Forms\Components\Select::make('tenor_id')
@@ -66,21 +65,19 @@ class PinjamanResource extends Resource
                                 if ($state) {
                                     $set('showSimulasi', true);
 
-                                    // Hitung simulasi otomatis ketika tenor berubah
-                                    $jumlah = $get('jumlah') ?: 0;
-                                    $tenor = TenorPinjaman::find($state);
+                                    $jumlah = (int) preg_replace('/[^0-9]/', '', $get('jumlah') ?: 0);
+                                    $tenorId = $get('tenor_id');
+                                    $tenor = TenorPinjaman::find($tenorId);
 
                                     if ($tenor && $jumlah > 0) {
                                         $durasi = $tenor->durasi;
                                         $bunga = $tenor->bunga;
-
-                                        // Hitung angsuran
+                                        $totalBunga = $jumlah * $bunga / 100 * ($durasi / 12);
                                         $pokok = $jumlah / $durasi;
-                                        $bungaPerBulan = ($jumlah * $bunga / 100) / $durasi;
+                                        $bungaPerBulan = $totalBunga / $durasi;
                                         $angsuran = $pokok + $bungaPerBulan;
 
-                                        // Hitung total
-                                        $totalBunga = $jumlah * $bunga / 100 * ($durasi / 12);
+
                                         $totalBayar = $jumlah + $totalBunga;
 
                                         $set('angsuran_bulanan', 'Rp ' . number_format($angsuran, 0, ',', '.'));
@@ -139,21 +136,19 @@ class PinjamanResource extends Resource
                                 ->color('primary')
                                 ->visible(fn(Forms\Get $get): bool => $get('showSimulasi'))
                                 ->action(function (Forms\Set $set, Forms\Get $get) {
-                                    $jumlah = $get('jumlah') ?: 0;
+                                    $jumlah = (int) preg_replace('/[^0-9]/', '', $get('jumlah') ?: 0);
                                     $tenorId = $get('tenor_id');
                                     $tenor = TenorPinjaman::find($tenorId);
 
                                     if ($tenor && $jumlah > 0) {
                                         $durasi = $tenor->durasi;
                                         $bunga = $tenor->bunga;
-
-                                        // Hitung angsuran
+                                        $totalBunga = $jumlah * $bunga / 100 * ($durasi / 12);
                                         $pokok = $jumlah / $durasi;
-                                        $bungaPerBulan = ($jumlah * $bunga / 100) / $durasi;
+                                        $bungaPerBulan = $totalBunga / $durasi;
                                         $angsuran = $pokok + $bungaPerBulan;
 
-                                        // Hitung total
-                                        $totalBunga = $jumlah * $bunga / 100 * ($durasi / 12);
+
                                         $totalBayar = $jumlah + $totalBunga;
 
                                         $set('angsuran_bulanan', 'Rp ' . number_format($angsuran, 0, ',', '.'));
@@ -191,30 +186,29 @@ class PinjamanResource extends Resource
                     ->label('Angsuran/Bulan')
                     ->money('IDR'),
 
+
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'warning' => 'pending',
                         'success' => 'disetujui',
                         'danger' => 'ditolak',
                     ]),
+
+                Tables\Columns\TextColumn::make('alasan_penolakan')
+                    ->label('Alasan Penolakan')
+
             ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-            ])
+            ->filters([])
+            ->actions([])
             ->modifyQueryUsing(function (Builder $query) {
-                // Hanya tampilkan pinjaman milik anggota yang login
+
                 return $query->where('user_id', Auth::id());
             });
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -222,8 +216,8 @@ class PinjamanResource extends Resource
         return [
             'index' => Pages\ListPinjamans::route('/'),
             'create' => Pages\CreatePinjaman::route('/create'),
-            'edit' => Pages\EditPinjaman::route('/{record}/edit'),
-            'view' => Pages\ViewPinjaman::route('/{record}'),
+
+
         ];
     }
 }

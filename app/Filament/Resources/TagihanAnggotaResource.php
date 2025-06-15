@@ -26,6 +26,21 @@ class TagihanAnggotaResource extends Resource
     protected static ?int $navigationSort = 4;
     protected static ?string $slug = 'tagihan-anggota';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = TagihanAnggota::where('status', "menunggu_verifikasi")->count();
+        return $count > 0 ? (string) $count : null;
+    }
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Tagihan menunggu verifikasi';
+    }
+
     public static function canCreate(): bool
     {
         return false;

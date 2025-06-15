@@ -22,6 +22,7 @@ class RiwayatTransaksiResource extends Resource
     protected static ?string $modelLabel = 'Riwayat Transaksi';
     protected static ?string $pluralModelLabel = 'Riwayat Transaksi';
     protected static ?string $navigationGroup = 'Keuangan';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -171,14 +172,12 @@ class RiwayatTransaksiResource extends Resource
                     })
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                // Tables\Actions\ViewAction::make(),
+                // Tables\Actions\EditAction::make(),
+                // Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ])
             ->defaultSort('tanggal', 'desc');
     }
@@ -194,8 +193,8 @@ class RiwayatTransaksiResource extends Resource
     {
         return [
             'index' => Pages\ListRiwayatTransaksis::route('/'),
-            'create' => Pages\CreateRiwayatTransaksi::route('/create'),
-            'edit' => Pages\EditRiwayatTransaksi::route('/{record}/edit'),
+            // 'create' => Pages\CreateRiwayatTransaksi::route('/create'),
+            // 'edit' => Pages\EditRiwayatTransaksi::route('/{record}/edit'),
         ];
     }
 }

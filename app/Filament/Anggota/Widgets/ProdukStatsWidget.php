@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProdukStatsWidget extends BaseWidget
 {
+    protected static ?int $sort = 5;
     protected function getStats(): array
     {
         $userId = Auth::id();
@@ -37,8 +38,8 @@ class ProdukStatsWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-shopping-cart')
                 ->color('info'),
 
-            Stat::make('Pendapatan', 'Rp ' . number_format($pendapatanTotal, 0, ',', '.'))
-                ->description('Total pendapatan dari produk Anda')
+            Stat::make('Pendapatan', 'Rp ' . number_format($pendapatanTotal - ($pendapatanTotal * 0.015), 0, ',', '.'))
+                ->description('Total pendapatan setelah dikurangi biaya admin')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
         ];

@@ -25,6 +25,22 @@ class PendaftaranAnggotaTetapResource extends Resource
     protected static ?string $pluralModelLabel = 'pendaftaran anggota tetap';
     protected static ?string $navigationGroup = 'Keanggotaan';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = PendaftaranAnggotaTetap::where('status', 'pending')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Tagihan menunggu verifikasi';
+    }
+
     public static function canCreate(): bool
     {
         return false;
@@ -36,13 +52,23 @@ class PendaftaranAnggotaTetapResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Informasi Anggota')
                     ->schema([
-                        Forms\Components\TextInput::make('user.name')
+                        Forms\Components\TextInput::make('name')
                             ->label('Nama')
-                            ->disabled(),
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->user) {
+                                    $component->state($record->user->name);
+                                }
+                            }),
 
-                        Forms\Components\TextInput::make('user.email')
+                        Forms\Components\TextInput::make('email')
                             ->label('Email')
-                            ->disabled(),
+                            ->disabled()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->user) {
+                                    $component->state($record->user->email);
+                                }
+                            }),
 
                         Forms\Components\TextInput::make('nik')
                             ->label('NIK')
@@ -61,17 +87,14 @@ class PendaftaranAnggotaTetapResource extends Resource
 
                 Forms\Components\Section::make('Simpanan Pokok')
                     ->schema([
-                        Forms\Components\FileUpload::make('bukti_pembayaran')
-                            ->label('Bukti Pembayaran')
-                            ->disabled()
-                            ->image()
-                            ->disk('public')
+                        Forms\Components\View::make('components.view-bukti-pembayaran')
                             ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('tanggal_pengajuan')
+
+                        Forms\Components\DatePicker::make('tanggal_pengajuan')
                             ->label('Tanggal Pengajuan')
-                            ->disabled()
-                            ->formatStateUsing(fn($state) => $state ? $state->format('d M Y') : '-'),
+                            ->displayFormat('d M Y')
+                            ->disabled(),
                     ]),
 
                 Forms\Components\Section::make('Verifikasi')
@@ -98,6 +121,7 @@ class PendaftaranAnggotaTetapResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->recordUrl(fn($record) => null)
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Nama')
@@ -111,6 +135,10 @@ class PendaftaranAnggotaTetapResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal_pengajuan')
                     ->label('Tanggal Pengajuan')
                     ->date('d M Y')
+                    ->sortable(),
+
+                Tables\Columns\ImageColumn::make('bukti_pembayaran')
+                    ->label('Bukti Pembayaran')
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
@@ -157,7 +185,13 @@ class PendaftaranAnggotaTetapResource extends Resource
                                 'diverifikasi_oleh' => Auth::user()->name,
                             ]);
 
-                        // Update data user
+                        \App\Models\RiwayatTransaksi::where('user_id', $record->user_id)
+                            ->where('jenis_transaksi', 'simpanan_pokok')
+                            ->where('status', 'pending')
+                            ->update([
+                                'status' => 'disetujui',
+                            ]);
+
                         $user = User::find($record->user_id);
                         $user->update([
                             'nik' => $record->nik,
@@ -204,7 +238,7 @@ class PendaftaranAnggotaTetapResource extends Resource
                     }),
 
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
             ])
             ->defaultSort('tanggal_pengajuan', 'desc');
     }
@@ -221,7 +255,7 @@ class PendaftaranAnggotaTetapResource extends Resource
 
         return [
             'index' => Pages\ListPendaftaranAnggotaTetaps::route('/'),
-            'edit' => Pages\EditPendaftaranAnggotaTetap::route('/{record}/edit'),
+            // 'edit' => Pages\EditPendaftaranAnggotaTetap::route('/{record}/edit'),
         ];
     }
 }

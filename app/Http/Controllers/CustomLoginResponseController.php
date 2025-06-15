@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CustomLoginResponseController extends Controller implements LoginResponse
 {
     public function toResponse($request): RedirectResponse
     {
         $user = Auth::user();
+        Log::info('User roles:', $user->roles->pluck('name')->toArray());
 
         if ($user->hasRole('anggota')) {
             return redirect()->route('filament.anggota.pages.dashboard');
