@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\RiwayatTransaksi;
+use App\Models\SaldoKoperasi;
 use App\Models\Simpanan;
 use App\Notifications\SimpananStatusNotification;
 
@@ -41,6 +42,20 @@ class SimpananObserver
                     $simpanan->user->notify(new SimpananStatusNotification($simpanan));
                 }
             }
+        }
+        // Jika status berubah menjadi disetujui
+        if ($simpanan->wasChanged('status') && $simpanan->status === 'disetujui') {
+            // Tambah saldo koperasi
+            SaldoKoperasi::tambah($simpanan->jumlah);
+
+            // Kirim notifikasi jika diperlukan
+            // Kode notifikasi yang sudah ada...
+        }
+
+        // Jika status berubah dari disetujui ke status lain
+        if ($simpanan->wasChanged('status') && $simpanan->getOriginal('status') === 'disetujui' && $simpanan->status !== 'disetujui') {
+            // Kurangi saldo koperasi
+            SaldoKoperasi::kurang($simpanan->jumlah);
         }
 
         if ($simpanan->isDirty('status') || $simpanan->isDirty('jumlah')) {

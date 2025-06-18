@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PinjamanResource\Pages;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
 use App\Models\Pinjaman;
+use App\Models\RiwayatTransaksi;
+use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -199,11 +201,26 @@ class PinjamanResource extends Resource
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn(Pinjaman $record) => $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Konfirmasi Persetujuan Pinjaman')
+                    ->modalDescription(fn(Pinjaman $record) => 'Dengan menyetujui pinjaman ini, dana sebesar Rp ' . number_format($record->jumlah, 0, ',', '.') . ' akan dicairkan dari saldo koperasi.')
+                    ->modalSubmitActionLabel('Ya, Setujui Pinjaman')
                     ->action(function (Pinjaman $record) {
-                        // Begin transaction
-                        DB::beginTransaction();
+                        $saldoKoperasi = SaldoKoperasi::getSaldo();
+                        if ($saldoKoperasi < $record->jumlah) {
+                            Notification::make()
+                                ->title('Saldo Koperasi Tidak Mencukupi')
+                                ->body("Saldo koperasi saat ini: Rp " . number_format($saldoKoperasi, 0, ',', '.') .
+                                    ", dibutuhkan: Rp " . number_format($record->jumlah, 0, ',', '.'))
+                                ->danger()
+                                ->send();
+                            return;
+                        }
 
+                        DB::beginTransaction();
                         try {
+                            // Kurangi saldo koperasi
+                            $saldoBaru = SaldoKoperasi::kurang($record->jumlah);
                             // Update status pinjaman
                             $record->update([
                                 'status' => 'disetujui',
@@ -212,7 +229,7 @@ class PinjamanResource extends Resource
                             ]);
 
                             // Update status riwayat transaksi
-                            \App\Models\RiwayatTransaksi::where('referensi_id', $record->id)
+                            RiwayatTransaksi::where('referensi_id', $record->id)
                                 ->where('referensi_tipe', 'App\\Models\\Pinjaman')
                                 ->where('jenis_transaksi', 'pinjaman')
                                 ->where('status', 'pending')
@@ -277,8 +294,6 @@ class PinjamanResource extends Resource
 
                             // Log error
                             \Illuminate\Support\Facades\Log::error("Error approving loan: " . $e->getMessage());
-
-                            // Tampilkan notifikasi error
                             Notification::make()
                                 ->title('Gagal Menyetujui Pinjaman')
                                 ->body("Terjadi kesalahan: " . $e->getMessage())

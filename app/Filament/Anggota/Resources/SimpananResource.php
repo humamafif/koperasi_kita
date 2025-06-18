@@ -44,11 +44,11 @@ class SimpananResource extends Resource
                         Forms\Components\Select::make('jenis')
                             ->label('Jenis Simpanan')
                             ->options([
-                                'wajib' => 'Simpanan Wajib',
+                                // 'wajib' => 'Simpanan Wajib',
                                 'sukarela' => 'Simpanan Sukarela',
                             ])
                             ->required()
-                            ->default('wajib')
+                            ->default('sukarela')
                             ->reactive(),
 
                         Forms\Components\TextInput::make('jumlah')

@@ -4,6 +4,7 @@ namespace App\Filament\Anggota\Resources;
 
 use App\Filament\Anggota\Resources\PembelianSayaResource\Pages;
 use App\Models\PembelianProduk;
+use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -141,6 +142,11 @@ class PembelianSayaResource extends Resource
                     ->action(function (PembelianProduk $record) {
                         $record->status = 'selesai';
                         $record->save();
+
+                        if ($record['status'] === 'selesai') {
+                            $biayaAdmin = $record->biaya_admin;
+                            SaldoKoperasi::tambah($biayaAdmin);
+                        }
                     })
                     ->visible(fn(PembelianProduk $record) => $record->status === 'dikirim'),
 

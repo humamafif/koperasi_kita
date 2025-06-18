@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 class EditTagihanSaya extends EditRecord
 {
     protected static string $resource = TagihanSayaResource::class;
+    protected static ?string $title = 'Form Tagihan Saya';
+    protected static ?string $breadcrumb = 'Form Tagihan Saya';
 
     protected function getHeaderActions(): array
     {

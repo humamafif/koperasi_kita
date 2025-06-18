@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PendaftaranAnggotaTetapResource\Pages;
 use App\Filament\Resources\PendaftaranAnggotaTetapResource\RelationManagers;
 use App\Models\PendaftaranAnggotaTetap;
+use App\Models\SaldoKoperasi;
 use App\Models\Simpanan;
 use App\Models\User;
 use Filament\Forms;
@@ -176,14 +177,18 @@ class PendaftaranAnggotaTetapResource extends Resource
                         ]);
 
                         // Update status simpanan pokok
-                        Simpanan::where('user_id', $record->user_id)
+                        $simpananPokok = Simpanan::where('user_id', $record->user_id)
                             ->where('jenis', 'pokok')
                             ->where('status', 'pending')
-                            ->update([
+                            ->first();
+
+                        if ($simpananPokok) {
+                            $simpananPokok->update([
                                 'status' => 'disetujui',
                                 'tanggal_verifikasi' => now(),
                                 'diverifikasi_oleh' => Auth::user()->name,
                             ]);
+                        }
 
                         \App\Models\RiwayatTransaksi::where('user_id', $record->user_id)
                             ->where('jenis_transaksi', 'simpanan_pokok')

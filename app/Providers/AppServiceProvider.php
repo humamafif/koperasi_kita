@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\PembelianProduk;
 use App\Models\PendaftaranAnggotaTetap;
 use App\Models\Pinjaman;
+use App\Models\SaldoKoperasi;
 use App\Models\Simpanan;
 use App\Models\TagihanAnggota;
 use App\Observers\PembelianProdukObserver;
@@ -14,6 +15,7 @@ use App\Observers\SimpananObserver;
 use App\Observers\TagihanAnggotaObserver;
 use Filament\Tables\Table;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,5 +43,8 @@ class AppServiceProvider extends ServiceProvider
         PembelianProduk::observe(PembelianProdukObserver::class);
         PendaftaranAnggotaTetap::observe(PendaftaranAnggotaTetapObserver::class);
         TagihanAnggota::observe(TagihanAnggotaObserver::class);
+        if (Schema::hasTable('saldo_koperasis') && SaldoKoperasi::count() === 0) {
+            SaldoKoperasi::create(['saldo' => 0]);
+        }
     }
 }

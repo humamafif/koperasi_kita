@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PembelianProdukResource\Pages;
 use App\Filament\Resources\PembelianProdukResource\RelationManagers;
 use App\Models\PembelianProduk;
+use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -192,6 +193,11 @@ class PembelianProdukResource extends Resource
                         if ($data['status'] === 'dibatalkan' && $oldStatus !== 'dibatalkan') {
                             $record->produk->stok += $record->jumlah;
                             $record->produk->save();
+                        }
+
+                        if ($data['status'] === 'selesai' && $oldStatus !== 'selesai') {
+                            $biayaAdmin = $record->biaya_admin;
+                            SaldoKoperasi::tambah($biayaAdmin);
                         }
                     })
                     ->visible(

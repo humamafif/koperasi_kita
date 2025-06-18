@@ -4,6 +4,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SHUDistributionResource\Pages;
+use App\Models\SaldoKoperasi;
 use App\Models\SHUBiaya;
 use App\Models\SHUDistribution;
 use App\Services\SHUCalculationService;
@@ -46,12 +47,12 @@ class SHUDistributionResource extends Resource
                 Forms\Components\Section::make('Saldo dan Pemotongan Biaya')
                     ->schema([
                         Forms\Components\TextInput::make('saldo_koperasi')
-                            ->label('Saldo Koperasi Saat Ini')
+                            ->label('Saldo Koperasi  Ini')
                             ->required()
                             ->disabled()
                             ->prefix('Rp')
                             ->default(function () {
-                                $saldo = (new SHUCalculationService)->getSaldoKoperasi();
+                                $saldo = (int) SaldoKoperasi::getSaldo();
                                 return number_format($saldo, 0, ',', '.');
                             }),
 
@@ -217,6 +218,11 @@ class SHUDistributionResource extends Resource
                         $result = (new SHUCalculationService)->distributeSHU($tahun);
 
                         if ($result['success']) {
+                            $shuBiaya = SHUBiaya::where('tahun', $tahun)->first();
+                            if ($shuBiaya && $shuBiaya->dana_cadangan) {
+                                SaldoKoperasi::query()->update(['saldo' => $shuBiaya->dana_cadangan]);
+                            }
+
                             Notification::make()
                                 ->title('SHU berhasil didistribusikan')
                                 ->body($result['message'])
@@ -317,8 +323,7 @@ class SHUDistributionResource extends Resource
     {
         try {
 
-            $saldoKoperasi = (new SHUCalculationService)->getSaldoKoperasi();
-
+            $saldoKoperasi = (int) SaldoKoperasi::getSaldo();
 
             $biayaOperasional = (float) ($get('biaya_operasional') ?? 0);
             $pajak = (float) ($get('pajak') ?? 0);

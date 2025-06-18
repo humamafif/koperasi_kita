@@ -36,25 +36,21 @@ class SHUStatsWidget extends BaseWidget
             Stat::make('Total SHU Diproses', 'Rp ' . number_format($totalSHU, 0, ',', '.'))
                 ->description('Total SHU yang dihitung')
                 ->descriptionIcon('heroicon-m-calculator')
-                ->chart([7, 3, 4, 5, 6, 3, 5, 3])
                 ->color('primary'),
 
             Stat::make('Total SHU Didistribusikan', 'Rp ' . number_format($totalDistributed, 0, ',', '.'))
                 ->description('Sudah dibagikan kepada anggota')
                 ->descriptionIcon('heroicon-m-banknotes')
-                ->chart([3, 5, 7, 8, 6, 9, 5, 7])
                 ->color('success'),
 
             Stat::make('SHU Menunggu Distribusi', 'Rp ' . number_format($totalPending, 0, ',', '.'))
                 ->description('Belum didistribusikan')
                 ->descriptionIcon('heroicon-m-clock')
-                ->chart([2, 3, 2, 1, 3, 4, 3, 2])
                 ->color('warning'),
 
             Stat::make('Rata-rata SHU Anggota', 'Rp ' . number_format($averageSHU, 0, ',', '.'))
                 ->description('Rata-rata SHU per anggota')
                 ->descriptionIcon('heroicon-m-user-group')
-                ->chart([5, 4, 6, 5, 7, 8, 6, 7])
                 ->color('info'),
         ];
     }

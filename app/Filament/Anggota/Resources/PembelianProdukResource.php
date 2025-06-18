@@ -5,6 +5,7 @@ namespace App\Filament\Anggota\Resources;
 use App\Filament\Anggota\Resources\PembelianProdukResource\Pages;
 use App\Filament\Anggota\Resources\PembelianProdukResource\RelationManagers;
 use App\Models\PembelianProduk;
+use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -161,13 +162,13 @@ class PembelianProdukResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->visible(
-                        fn(PembelianProduk $record): bool =>
-                        $record->penjual_id === Auth::id() &&
-                            !in_array($record->status, ['selesai', 'dibatalkan'])
-                    ),
+                // Tables\Actions\ViewAction::make(),
+                // Tables\Actions\EditAction::make()
+                //     ->visible(
+                //         fn(PembelianProduk $record): bool =>
+                //         $record->penjual_id === Auth::id() &&
+                //             !in_array($record->status, ['selesai', 'dibatalkan'])
+                //     ),
                 Tables\Actions\Action::make('updateStatus')
                     ->label('Update Status')
                     ->icon('heroicon-o-arrow-path')
@@ -193,6 +194,11 @@ class PembelianProdukResource extends Resource
                             $record->produk->stok += $record->jumlah;
                             $record->produk->save();
                         }
+
+                        if ($data['status'] === 'selesai' && $oldStatus !== 'selesai') {
+                            $biayaAdmin = $record->biaya_admin;
+                            SaldoKoperasi::tambah($biayaAdmin);
+                        }
                     })
                     ->visible(
                         fn(PembelianProduk $record): bool =>
@@ -215,8 +221,8 @@ class PembelianProdukResource extends Resource
     {
         return [
             'index' => Pages\ListPembelianProduks::route('/'),
-            'view' => Pages\ViewPembelianProduk::route('/{record}'),
-            'edit' => Pages\EditPembelianProduk::route('/{record}/edit'),
+            // 'view' => Pages\ViewPembelianProduk::route('/{record}'),
+            // 'edit' => Pages\EditPembelianProduk::route('/{record}/edit'),
         ];
     }
 

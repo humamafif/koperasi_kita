@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TagihanAnggotaResource\Pages;
 use App\Filament\Resources\TagihanAnggotaResource\RelationManagers;
+use App\Models\Simpanan;
 use App\Models\TagihanAnggota;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -281,7 +282,6 @@ class TagihanAnggotaResource extends Resource
                             'tanggal_verifikasi' => now(),
                             'diverifikasi_oleh' => Auth::user()->name,
                         ]);
-
                         // Tambahkan ke riwayat transaksi
                         if ($record->jenis_tagihan === 'simpanan_wajib') {
                             // Buat simpanan baru
@@ -296,6 +296,8 @@ class TagihanAnggotaResource extends Resource
                                 'diverifikasi_oleh' => Auth::user()->name,
                                 'keterangan' => "Pembayaran tagihan simpanan wajib periode {$record->periode}",
                             ]);
+                            // Tambah saldo koperasi
+                            \App\Models\SaldoKoperasi::tambah($record->jumlah);
                         }
                     }),
             ])

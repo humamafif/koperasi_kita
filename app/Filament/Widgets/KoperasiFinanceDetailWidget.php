@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\PembelianProduk;
 use App\Models\Pinjaman;
+use App\Models\SaldoKoperasi;
 use App\Models\Simpanan;
 use App\Models\TagihanAnggota;
 use App\Models\TenorPinjaman;
@@ -16,13 +17,22 @@ class KoperasiFinanceDetailWidget extends Widget
     protected static string $view = 'filament.admin.widgets.koperasi-finance-detail-widget';
     protected static ?int $sort = 1;
     protected int|string|array $columnSpan = 'full';
+
+    public function getPinjamanYangSudahDibayar()
+    {
+        $tagihanLunas = TagihanAnggota::where('jenis_tagihan', 'angsuran_pinjaman')
+            ->where('status', 'lunas')
+            ->whereNotNull('pinjaman_id')
+            ->get();
+        $tagihanLunasTotal = $tagihanLunas->sum('jumlah');
+        return $tagihanLunasTotal;
+    }
+
+
+
     public function getTotalSaldoKoperasi()
     {
-        $totalSimpanan = Simpanan::where('status', 'disetujui')->sum('jumlah');
-        $totalBiayaAdmin = PembelianProduk::where('status', 'selesai')->sum('biaya_admin');
-        $totalBungaTerbayar = $this->getTotalBungaTerbayar();
-
-        return $totalSimpanan + $totalBiayaAdmin + $totalBungaTerbayar;
+        return  SaldoKoperasi::getSaldo();
     }
 
     public function getTotalSimpananPokokData()

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SHUDistributionResource\Pages;
 
 use App\Filament\Resources\SHUDistributionResource;
+use App\Models\SaldoKoperasi;
 use App\Models\SHUBiaya;
 use App\Models\SHUDistribution;
 use App\Services\SHUCalculationService;
@@ -37,7 +38,7 @@ class CreateSHUDistribution extends CreateRecord
                     $this->formState = $state;
 
                     // Ambil nilai-nilai yang dibutuhkan untuk perhitungan
-                    $this->saldoKoperasi = (new SHUCalculationService)->getSaldoKoperasi();
+                    $this->saldoKoperasi = (int) SaldoKoperasi::getSaldo();
                     $biayaOperasional = (float) ($state['biaya_operasional'] ?? 0);
                     $pajak = (float) ($state['pajak'] ?? 0);
                     $danaCadangan = (float) ($state['dana_cadangan'] ?? 0);
@@ -88,7 +89,7 @@ class CreateSHUDistribution extends CreateRecord
         parent::mount();
 
         // Set saldo koperasi saat awal
-        $this->saldoKoperasi = (new SHUCalculationService)->getSaldoKoperasi();
+        $this->saldoKoperasi = (int) SaldoKoperasi::getSaldo();
 
         // Pre-fill saldo koperasi field dengan format
         $this->form->fill([
@@ -120,7 +121,7 @@ class CreateSHUDistribution extends CreateRecord
             // Ambil saldo koperasi
             $saldoKoperasi = (float) $this->saldoKoperasi;
             if ($saldoKoperasi <= 0) {
-                $saldoKoperasi = (new SHUCalculationService)->getSaldoKoperasi();
+                $saldoKoperasi =   SaldoKoperasi::getSaldo();
             }
 
             // Parse nilai input biaya

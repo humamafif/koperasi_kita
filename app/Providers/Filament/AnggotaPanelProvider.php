@@ -31,6 +31,7 @@ class AnggotaPanelProvider extends PanelProvider
             ->id('anggota')
             ->path('anggota')
             ->login()
+            ->homeUrl('/')
             ->registration()
             ->font('Aileron')
             ->colors([
