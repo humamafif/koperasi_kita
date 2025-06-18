@@ -5,12 +5,12 @@
                 Detail Keuangan Koperasi
             </h2>
 
-            <div class="rounded-lg  border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="rounded-lg  border-gray-200 dark:border-gray-700 ">
                 <!-- Total Saldo Koperasi -->
-                <div class="mb-6" style="margin-bottom: 8px">
+                <div class="mb-6" style="margin-bottom: 18px">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold">Total Saldo Koperasi</h3>
-                        <div class="text-2xl font-bold text-success-600 dark:text-success-500">
+                        <h3 class="text-xl font-semibold">Total Saldo Koperasi</h3>
+                        <div class="text-2xl font-bold text-primary-600 dark:text-primary-500">
                             Rp {{ number_format($this->getTotalSaldoKoperasi(), 0, ',', '.') }}
                         </div>
                     </div>
@@ -19,11 +19,10 @@
                 <!-- Layout 2x3 Grid untuk Detail Keuangan -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <!-- Simpanan Pokok -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                         <div class="flex flex-col">
                             <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Simpanan Pokok</div>
-                            <div class="text-lg font-semibold text-primary-600 dark:text-primary-500 mt-1">
+                            <div class="text-lg font-semibold mt-1">
                                 Rp {{ number_format($this->getTotalSimpananPokokData()['jumlah'], 0, ',', '.') }}
                             </div>
                             <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -33,8 +32,7 @@
                     </div>
 
                     <!-- Simpanan Wajib -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 ">
                         <div class="flex flex-col">
                             <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Simpanan Wajib</div>
                             <div class="text-lg font-semibold text-success-600 dark:text-success-500 mt-1">
@@ -48,8 +46,7 @@
                     </div>
 
                     <!-- Simpanan Sukarela -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 ">
                         <div class="flex flex-col">
                             <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Simpanan Sukarela</div>
                             <div class="text-lg font-semibold text-info-600 dark:text-info-500 mt-1">
@@ -63,8 +60,7 @@
                     </div>
 
                     <!-- Biaya Admin -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                         <div class="flex flex-col">
                             <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Biaya Admin (1.5%)</div>
                             <div class="text-lg font-semibold text-warning-600 dark:text-warning-500 mt-1">
@@ -77,12 +73,19 @@
                     </div>
 
                     <!-- Bunga Pinjaman -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 ">
                         <div class="flex flex-col">
-                            <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Bunga Pinjaman</div>
-                            <div class="text-lg font-semibold text-success-600 dark:text-success-500 mt-1">
-                                Rp {{ number_format($this->getBungaPinjamanData()['jumlah'], 0, ',', '.') }}
+                            <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Pinjaman yang sudah di
+                                bayar</div>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-lg font-semibold text-success-600 dark:text-success-500">
+                                    Rp {{ number_format($this->getPinjamanYangSudahDibayar(), 0, ',', '.') }}
+                                </span>
+                                <span style="margin-left: 8px;"
+                                    class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    (Bunga: Rp
+                                    {{ number_format($this->getBungaPinjamanData()['jumlah'], 0, ',', '.') }})
+                                </span>
                             </div>
                             <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                 {{ $this->getBungaPinjamanData()['pinjaman_count'] }} pinjaman |
@@ -91,8 +94,7 @@
                         </div>
                     </div>
                     <!-- Anggota Tetap -->
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/60">
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 ">
                         <div class="flex flex-col">
                             <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Anggota Tetap</div>
                             <div class="text-lg font-semibold text-success-600 dark:text-success-500 mt-1">
