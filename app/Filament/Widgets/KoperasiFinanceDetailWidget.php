@@ -3,6 +3,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\KoperasiSetting;
 use App\Models\PembelianProduk;
 use App\Models\Pinjaman;
 use App\Models\SaldoKoperasi;
@@ -93,6 +94,11 @@ class KoperasiFinanceDetailWidget extends Widget
             'anggota_count' => $anggota_count,
             'transaksi_count' => $transaksi_count
         ];
+    }
+
+    public function getBiayaAdmin()
+    {
+        return KoperasiSetting::getBiayaAdminPercentDisplay();
     }
 
     public function getBiayaAdminData()

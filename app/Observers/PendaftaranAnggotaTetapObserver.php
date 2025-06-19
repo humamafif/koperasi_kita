@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\KoperasiSetting;
 use App\Models\PendaftaranAnggotaTetap;
 use App\Models\TagihanAnggota;
 use App\Notifications\PendaftaranAnggotaTetapNotification;
@@ -33,6 +34,8 @@ class PendaftaranAnggotaTetapObserver
     protected function createMandatorySavingBill(PendaftaranAnggotaTetap $pendaftaran): void
     {
         $startDate = $pendaftaran->tanggal_verifikasi;
+
+        $simpananWajibAmount = KoperasiSetting::getSimpananWajibAmount();
 
         // Log untuk debugging
         \Illuminate\Support\Facades\Log::info("Membuat tagihan simpanan wajib pertama UDAH UPDATE", [
@@ -80,7 +83,7 @@ class PendaftaranAnggotaTetapObserver
             TagihanAnggota::create([
                 'user_id' => $pendaftaran->user_id,
                 'jenis_tagihan' => 'simpanan_wajib',
-                'jumlah' => 50000, // Rp 50.000
+                'jumlah' => $simpananWajibAmount,
                 'tanggal_jatuh_tempo' => $dueDate,
                 'status' => 'belum_bayar',
                 'periode' => $periode,

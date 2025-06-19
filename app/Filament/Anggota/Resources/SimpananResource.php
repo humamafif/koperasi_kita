@@ -58,14 +58,17 @@ class SimpananResource extends Resource
                             ->prefix('Rp')
                             ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->default(function (Forms\Get $get) {
-                                return $get('jenis') === 'wajib' ? 50000 : null;
+                                return $get('jenis') === 'wajib'
+                                    ? \App\Models\KoperasiSetting::getSimpananWajibAmount()
+                                    : null;
                             })
                             ->readOnly(function (Forms\Get $get) {
                                 return $get('jenis') === 'wajib';
                             })
                             ->helperText(function (Forms\Get $get) {
+                                $simpananWajibAmount = \App\Models\KoperasiSetting::getSimpananWajibAmount();
                                 return $get('jenis') === 'wajib'
-                                    ? 'Simpanan wajib sebesar Rp 50.000 per bulan'
+                                    ? 'Simpanan wajib sebesar Rp ' . number_format($simpananWajibAmount, 0, ',', '.') . ' per bulan'
                                     : 'Masukkan jumlah simpanan sukarela';
                             }),
 

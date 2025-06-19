@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PembelianProdukResource\Pages;
 use App\Filament\Resources\PembelianProdukResource\RelationManagers;
+use App\Models\KoperasiSetting;
 use App\Models\PembelianProduk;
 use App\Models\SaldoKoperasi;
 use Filament\Forms;
@@ -74,7 +75,7 @@ class PembelianProdukResource extends Resource
                             ->disabled(fn($record) => in_array($record?->status, ['selesai', 'dibatalkan'])),
 
                         Forms\Components\TextInput::make('biaya_admin')
-                            ->label('Biaya Admin (1.5%)')
+                            ->label('Biaya Admin (' . KoperasiSetting::getBiayaAdminPercentDisplay() . ')')
                             ->prefix('Rp')
                             ->disabled(),
 
@@ -142,7 +143,7 @@ class PembelianProdukResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('biaya_admin')
-                    ->label('Biaya Admin (1.5%)')
+                    ->label('Biaya Admin (' . KoperasiSetting::getBiayaAdminPercentDisplay() . ')')
                     ->money('IDR')
                     ->sortable(),
 

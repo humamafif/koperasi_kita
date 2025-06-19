@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\KoperasiSetting;
 use App\Models\PembelianProduk;
 use App\Models\Produk;
 use App\Models\User;
@@ -125,7 +126,7 @@ class BrowseProduk extends Page implements HasTable
 
                         Placeholder::make('info_biaya_admin')
                             ->label('Informasi Biaya')
-                            ->content('Setiap pembelian akan dikenakan biaya administrasi sebesar 1.5% dari total transaksi')
+                            ->content('Setiap pembelian akan dikenakan biaya administrasi sebesar ' . KoperasiSetting::getBiayaAdminPercentDisplay() . ' dari total transaksi')
                             ->extraAttributes(['class' => 'text-sm text-gray-500']),
                     ])
                     ->action(function (Produk $record, array $data) {
@@ -140,7 +141,7 @@ class BrowseProduk extends Page implements HasTable
                         }
 
                         $total = $record->harga * $data['jumlah'];
-                        $biayaAdmin = $total * 0.015;
+                        $biayaAdmin = KoperasiSetting::calculateBiayaAdmin($total);
                         $totalPenjual = $total - $biayaAdmin;
 
                         // Buat pembelian baru

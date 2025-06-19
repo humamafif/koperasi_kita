@@ -19,9 +19,11 @@ class DaftarAnggotaTetap extends Page
     protected static ?string $slug = 'daftar-anggota-tetap';
     protected static ?int $navigationSort = 3;
 
+
     protected static string $view = 'filament.anggota.pages.daftar-anggota-tetap';
 
     public ?array $data = [];
+    public ?int $simpananPokok = null;
     protected $shouldShowPage = true;
 
     public static function shouldRegisterNavigation(): bool
@@ -41,6 +43,8 @@ class DaftarAnggotaTetap extends Page
 
     public function mount(): void
     {
+        // Dapatkan nilai simpanan pokok
+        $this->simpananPokok = \App\Models\KoperasiSetting::getSimpananPokokAmount();
         // Cek jika user sudah anggota tetap atau memiliki pendaftaran yang pending
         if (Auth::user()->hasRole('anggota_tetap') || Auth::user()->is_anggota_tetap) {
             Notification::make()
@@ -109,7 +113,10 @@ class DaftarAnggotaTetap extends Page
                 Forms\Components\Section::make('Pernyataan')
                     ->schema([
                         Forms\Components\Checkbox::make('persetujuan')
-                            ->label('Saya menyatakan bahwa data yang saya isi adalah benar dan bersedia menjadi anggota tetap Koperasi Kita dengan membayar simpanan pokok sebesar Rp 100.000,-')
+                            ->label(function () {
+                                $simpananPokok = \App\Models\KoperasiSetting::getSimpananPokokAmount();
+                                return "Saya menyatakan bahwa data yang saya isi adalah benar dan bersedia menjadi anggota tetap Koperasi Kita dengan membayar simpanan pokok sebesar Rp " . number_format($simpananPokok, 0, ',', '.') . ",-";
+                            })
                             ->required()
                             ->columnSpanFull(),
                     ]),
@@ -128,10 +135,9 @@ class DaftarAnggotaTetap extends Page
                 ->body('Anda harus menyetujui pernyataan untuk melanjutkan pendaftaran.')
                 ->danger()
                 ->send();
-
             return;
         }
-
+        $simpananPokok = \App\Models\KoperasiSetting::getSimpananPokokAmount();
         // Buat pendaftaran anggota tetap
         $pendaftaran = PendaftaranAnggotaTetap::create([
             'user_id' => Auth::id(),
@@ -147,7 +153,7 @@ class DaftarAnggotaTetap extends Page
         Simpanan::create([
             'user_id' => Auth::id(),
             'jenis' => 'pokok',
-            'jumlah' => 100000, // Rp 100.000
+            'jumlah' => $simpananPokok,
             'bukti_pembayaran' => $data['bukti_pembayaran'],
             'status' => 'pending',
             'tanggal_pembayaran' => now(),

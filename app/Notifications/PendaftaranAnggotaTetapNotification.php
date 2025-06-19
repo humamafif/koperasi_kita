@@ -32,10 +32,11 @@ class PendaftaranAnggotaTetapNotification extends Notification
             ->subject("Pendaftaran Anggota Tetap - {$this->getStatusText($status)}");
 
         if ($status === 'disetujui') {
+            $simpananPokok = \App\Models\KoperasiSetting::getSimpananPokokAmount();
             $message->greeting("Selamat, Pendaftaran Anggota Tetap Anda Disetujui!")
                 ->line("Pendaftaran Anda sebagai anggota tetap telah disetujui.")
                 ->line("Anda sekarang dapat melakukan simpanan wajib dan sukarela.")
-                ->line("Simpanan pokok Anda sebesar Rp 100.000 telah tercatat.")
+                ->line("Simpanan pokok Anda sebesar Rp " . number_format($simpananPokok, 0, ',', '.') . " telah tercatat.")
                 ->action('Kelola Simpanan', url('/anggota/simpanan'));
         } else {
             $message->greeting("Pendaftaran Anggota Tetap Anda Ditolak")

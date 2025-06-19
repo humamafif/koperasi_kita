@@ -4,6 +4,7 @@ namespace App\Filament\Anggota\Resources;
 
 use App\Filament\Anggota\Resources\ProdukResource\Pages;
 use App\Filament\Anggota\Resources\ProdukResource\RelationManagers;
+use App\Models\KoperasiSetting;
 use App\Models\Produk;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -55,6 +56,7 @@ class ProdukResource extends Resource
                             ->label('Harga')
                             ->required()
                             ->numeric()
+                            ->helperText('Setiap pembelian produk akan dikenakan biaya administrasi sebesar ' . KoperasiSetting::getBiayaAdminPercentDisplay())
                             ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->prefix('Rp'),
 

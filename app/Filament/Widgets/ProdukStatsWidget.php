@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\KoperasiSetting;
 use App\Models\PembelianProduk;
 use App\Models\Produk;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -38,7 +39,7 @@ class ProdukStatsWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-shopping-cart')
                 ->color('info'),
 
-            Stat::make('Pendapatan Produk', 'Rp ' . number_format($pendapatanTotal - ($pendapatanTotal * 0.015), 0, ',', '.'))
+            Stat::make('Pendapatan Produk', 'Rp ' . number_format($pendapatanTotal - (KoperasiSetting::calculateBiayaAdmin($pendapatanTotal)), 0, ',', '.'))
                 ->description('Total pendapatan setelah dikurangi biaya admin')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),

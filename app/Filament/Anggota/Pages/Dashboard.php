@@ -48,6 +48,7 @@ class Dashboard extends BaseDashboard
         // Tambahkan widget upgrade untuk anggota biasa
         if (Auth::check() && !Auth::user()->hasRole('anggota_tetap')) {
             $widgets[] = \App\Filament\Anggota\Widgets\UpgradeAnggotaWidget::class;
+            $widgets[] = \App\Filament\Anggota\Widgets\ProdukStatsWidget::class;
         }
 
         // Widgets lain jika perlu ditambahkan

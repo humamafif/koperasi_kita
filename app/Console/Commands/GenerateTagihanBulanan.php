@@ -50,6 +50,7 @@ class GenerateTagihanBulanan extends Command
                 ->exists();
 
             if (!$tagihanExists || $this->option('force')) {
+                $simpananWajibAmount = \App\Models\KoperasiSetting::getSimpananWajibAmount();
                 TagihanAnggota::updateOrCreate(
                     [
                         'user_id' => $user->id,
@@ -57,7 +58,7 @@ class GenerateTagihanBulanan extends Command
                         'periode' => $periode,
                     ],
                     [
-                        'jumlah' => 50000, // Rp 50.000
+                        'jumlah' => $simpananWajibAmount,
                         'tanggal_jatuh_tempo' => $tanggalJatuhTempo,
                         'status' => 'belum_bayar',
                         'keterangan' => "Tagihan simpanan wajib periode " . Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y'),

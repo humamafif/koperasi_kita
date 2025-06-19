@@ -62,7 +62,8 @@
                     <!-- Biaya Admin -->
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                         <div class="flex flex-col">
-                            <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Biaya Admin (1.5%)</div>
+                            <div class="font-medium text-gray-500 dark:text-gray-400 text-sm">Biaya Admin
+                                ({{ $this->getBiayaAdmin() }})</div>
                             <div class="text-lg font-semibold text-warning-600 dark:text-warning-500 mt-1">
                                 Rp {{ number_format($this->getBiayaAdminData()['jumlah'], 0, ',', '.') }}
                             </div>

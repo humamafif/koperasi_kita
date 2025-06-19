@@ -9,7 +9,9 @@
                     <x-heroicon-o-exclamation-circle class="h-6 w-6" style="stroke: red;" />
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Untuk menjadi anggota tetap, Anda perlu membayar simpanan pokok sebesar <b>Rp 100.000,-</b> dan
+                    Untuk menjadi anggota tetap, Anda perlu membayar simpanan pokok sebesar <b>Rp
+                        {{ number_format(\App\Models\KoperasiSetting::getSimpananPokokAmount(), 0, ',', '.') }},-</b>
+                    dan
                     mengisi
                     data
                     diri lengkap di bawah ini.
