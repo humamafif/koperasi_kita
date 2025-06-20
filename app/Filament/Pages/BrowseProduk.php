@@ -2,10 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\PembelianSayaResource;
 use App\Models\KoperasiSetting;
 use App\Models\PembelianProduk;
 use App\Models\Produk;
 use App\Models\User;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -123,11 +125,22 @@ class BrowseProduk extends Page implements HasTable
                         Textarea::make('catatan')
                             ->label('Catatan')
                             ->maxLength(500),
+                        Placeholder::make('pembayaran_heading')
+                            ->label('Informasi Pembayaran')
+                            ->content('Upload bukti transfer untuk mempercepat proses pembelian')
+                            ->columnSpanFull(),
 
-                        Placeholder::make('info_biaya_admin')
-                            ->label('Informasi Biaya')
-                            ->content('Setiap pembelian akan dikenakan biaya administrasi sebesar ' . KoperasiSetting::getBiayaAdminPercentDisplay() . ' dari total transaksi')
-                            ->extraAttributes(['class' => 'text-sm text-gray-500']),
+                        FileUpload::make('bukti_pembayaran')
+                            ->label('Bukti Pembayaran')
+                            ->required()
+                            ->disk('public')
+                            ->directory('bukti-pembayaran')
+                            ->image()
+                            ->imageResizeMode('cover')
+                            ->imageResizeTargetWidth('600')
+                            ->imageResizeTargetHeight('600')
+                            ->maxSize(2048)
+                            ->helperText('Format: JPG, PNG. Maks: 2MB'),
                     ])
                     ->action(function (Produk $record, array $data) {
                         // Periksa apakah stok mencukupi
@@ -154,15 +167,18 @@ class BrowseProduk extends Page implements HasTable
                             'total' => $total,
                             'biaya_admin' => $biayaAdmin,
                             'total_penjual' => $totalPenjual,
-                            'status' => 'pending',
+                            'bukti_pembayaran' => $data['bukti_pembayaran'],
+                            'status_pembayaran' => 'terverifikasi',
+                            'status' => 'diproses',
                             'catatan' => $data['catatan'] ?? null,
+                            'tanggal_pembelian' => now(),
                         ]);
 
                         // Kurangi stok produk
                         $record->stok -= $data['jumlah'];
                         $record->save();
 
-                        // Tampilkan notifikasi sukses
+                        return redirect()->to(PembelianSayaResource::getUrl());
                         Notification::make()
                             ->title('Pembelian berhasil')
                             ->body('Pembelian Anda sedang diproses oleh penjual.')

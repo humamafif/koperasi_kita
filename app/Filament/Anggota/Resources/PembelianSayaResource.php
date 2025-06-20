@@ -7,6 +7,7 @@ use App\Models\PembelianProduk;
 use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -66,6 +67,21 @@ class PembelianSayaResource extends Resource
                             ->label('Status')
                             ->disabled(),
 
+                        Forms\Components\FileUpload::make('bukti_pembayaran')
+                            ->label('Bukti Pembayaran')
+                            ->image()
+                            ->maxSize(2048)
+                            ->directory('bukti-pembayaran')
+                            ->visibility('public')
+                            ->required(function ($record) {
+                                return $record && $record->status_pembayaran === 'belum_bayar';
+                            })
+                            ->visible(function ($record) {
+                                return $record && in_array($record->status_pembayaran, ['belum_bayar', 'menunggu_verifikasi']);
+                            })
+                            ->helperText('Upload bukti pembayaran Anda (Max: 2MB, Format: JPG, PNG)')
+                            ->columnSpanFull(),
+
                         Forms\Components\DateTimePicker::make('created_at')
                             ->label('Tanggal Pembelian')
                             ->displayFormat('d M Y H:i')
@@ -109,6 +125,20 @@ class PembelianSayaResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
+                Tables\Columns\ImageColumn::make('bukti_pembayaran')
+                    ->label('Bukti Pembayaran')
+                    ->disk('public'),
+
+                Tables\Columns\TextColumn::make('status_pembayaran')
+                    ->label('Status Pembayaran')
+                    ->badge()
+                    ->formatStateUsing(fn(string $state) => ucwords(str_replace('_', ' ', $state)))
+                    ->color(fn(string $state): string => match ($state) {
+                        'belum_bayar' => 'danger',
+                        'menunggu_verifikasi' => 'warning',
+                        'terverifikasi' => 'success',
+                        default => 'gray',
+                    }),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'danger' => 'dibatalkan',
@@ -163,6 +193,50 @@ class PembelianSayaResource extends Resource
                         $record->produk->save();
                     })
                     ->visible(fn(PembelianProduk $record) => $record->status === 'pending'),
+
+                Tables\Actions\Action::make('upload_bukti')
+                    ->label('Upload Bukti')
+                    ->icon('heroicon-o-paper-clip')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\FileUpload::make('bukti_pembayaran')
+                            ->label('Bukti Pembayaran')
+                            ->image()
+                            ->required()
+                            ->maxSize(2048) // 2MB
+                            ->directory('bukti-pembayaran')
+                            ->visibility('public'),
+                    ])
+                    ->action(function (PembelianProduk $record, array $data): void {
+                        $record->update([
+                            'bukti_pembayaran' => $data['bukti_pembayaran'],
+                            'status_pembayaran' => 'terverifikasi'
+                        ]);
+
+                        Notification::make()
+                            ->title('Bukti pembayaran berhasil diupload')
+                            ->body('Harap tunggu verifikasi dari penjual.')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(
+                        fn(PembelianProduk $record): bool =>
+                        $record->status_pembayaran === 'belum_bayar'
+                    ),
+
+                Tables\Actions\Action::make('lihat_bukti')
+                    ->label('Lihat Bukti')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->url(
+                        fn(PembelianProduk $record): string =>
+                        asset('storage/' . $record->bukti_pembayaran)
+                    )
+                    ->openUrlInNewTab()
+                    ->visible(
+                        fn(PembelianProduk $record): bool =>
+                        $record->bukti_pembayaran && in_array($record->status_pembayaran, ['menunggu_verifikasi', 'terverifikasi'])
+                    ),
             ])
             ->bulkActions([])
             ->defaultSort('created_at', 'desc');

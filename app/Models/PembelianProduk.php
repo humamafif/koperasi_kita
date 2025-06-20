@@ -24,6 +24,8 @@ class PembelianProduk extends Model
         'harga_satuan',
         'total',
         'biaya_admin',
+        'bukti_pembayaran',
+        'status_pembayaran',
         'total_penjual',
         'status',
         'catatan'

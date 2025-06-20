@@ -46,5 +46,11 @@ class PembelianProdukObserver
                     ->sendToDatabase($pembeli);
             }
         }
+        if ($pembelianProduk->isDirty('status_pembayaran') && $pembelianProduk->status_pembayaran === 'terverifikasi') {
+            if ($pembelianProduk->status === 'pending') {
+                $pembelianProduk->status = 'diproses';
+                $pembelianProduk->save();
+            }
+        }
     }
 }

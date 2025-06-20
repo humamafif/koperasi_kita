@@ -9,6 +9,7 @@ use App\Models\PembelianProduk;
 use App\Models\SaldoKoperasi;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -57,6 +58,24 @@ class PembelianProdukResource extends Resource
                             ->label('Harga Satuan')
                             ->prefix('Rp')
                             ->disabled(),
+                        Forms\Components\FileUpload::make('bukti_pembayaran')
+                            ->label('Bukti Pembayaran')
+                            ->image()
+                            ->disabled()
+                            ->helperText('Bukti pembayaran yang diupload oleh pembeli')
+                            ->columnSpanFull(),
+
+                        Forms\Components\Select::make('status_pembayaran')
+                            ->label('Status Pembayaran')
+                            ->options([
+                                'belum_bayar' => 'Belum Bayar',
+                                'menunggu_verifikasi' => 'Menunggu Verifikasi',
+                                'terverifikasi' => 'Terverifikasi',
+                            ])
+                            ->disabled(function ($record) {
+                                return $record && $record->status_pembayaran !== 'menunggu_verifikasi';
+                            })
+                            ->columnSpanFull(),
 
                         Forms\Components\TextInput::make('total')
                             ->label('Total')
@@ -127,6 +146,21 @@ class PembelianProdukResource extends Resource
                     ->label('Total')
                     ->money('IDR')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('status_pembayaran')
+                    ->label('Status Pembayaran')
+                    ->badge()
+                    ->formatStateUsing(fn(string $state) => ucwords(str_replace('_', ' ', $state)))
+                    ->color(fn(string $state): string => match ($state) {
+                        'belum_bayar' => 'danger',
+                        'menunggu_verifikasi' => 'warning',
+                        'terverifikasi' => 'success',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\ImageColumn::make('bukti_pembayaran')
+                    ->label('Bukti Pembayaran')
+                    ->disk('public')
+                    ->square(),
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
@@ -205,6 +239,19 @@ class PembelianProdukResource extends Resource
                         fn(PembelianProduk $record): bool =>
                         $record->penjual_id === Auth::id() &&
                             !in_array($record->status, ['selesai', 'dibatalkan'])
+                    ),
+                Tables\Actions\Action::make('lihat_bukti')
+                    ->label('Lihat Bukti')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->url(
+                        fn(PembelianProduk $record): string =>
+                        asset('storage/' . $record->bukti_pembayaran)
+                    )
+                    ->openUrlInNewTab()
+                    ->visible(
+                        fn(PembelianProduk $record): bool =>
+                        $record->bukti_pembayaran && in_array($record->status_pembayaran, ['menunggu_verifikasi', 'terverifikasi'])
                     ),
             ])
             ->bulkActions([])
