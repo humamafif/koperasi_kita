@@ -15,6 +15,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class ProdukResource extends Resource
 {
@@ -53,7 +54,9 @@ class ProdukResource extends Resource
 
                         Forms\Components\TextInput::make('harga')
                             ->label('Harga')
-                            ->helperText('Setiap pembelian produk akan dikenakan biaya administrasi sebesar ' . KoperasiSetting::getBiayaAdminPercentDisplay())
+                            ->helperText(fn() => new HtmlString(
+                                '<span style="color: red; font-weight: 500;">Setiap pembelian produk akan dikenakan biaya administrasi sebesar ' . KoperasiSetting::getBiayaAdminPercentDisplay() . '</span>'
+                            ))
                             ->required()
                             ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
                             ->numeric()
