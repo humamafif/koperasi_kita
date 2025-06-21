@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('tanggal_pengambilan');
             $table->string('keterangan')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

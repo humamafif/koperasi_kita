@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('saldo', 15, 2)->default(0);
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

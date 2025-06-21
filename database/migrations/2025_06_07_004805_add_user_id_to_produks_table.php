@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('produks', function (Blueprint $table) {
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->engine = 'InnoDB';
         });
     }
 

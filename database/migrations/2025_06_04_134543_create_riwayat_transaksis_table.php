@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->text('keterangan')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
             $table->index('user_id');
             $table->index('jenis_transaksi');
             $table->index(['referensi_id', 'referensi_tipe']);

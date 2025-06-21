@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('pembelian_produks', function (Blueprint $table) {
             $table->decimal('biaya_admin', 15, 2)->default(0)->after('total');
             $table->decimal('total_penjual', 15, 2)->default(0)->after('biaya_admin');
+            $table->engine = 'InnoDB';
         });
     }
 

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('shu_distributions', function (Blueprint $table) {
             $table->boolean('is_claimed')->default(false)->after('status');
             $table->timestamp('claimed_at')->nullable()->after('is_claimed');
+            $table->engine = 'InnoDB';
         });
     }
 

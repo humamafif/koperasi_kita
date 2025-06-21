@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'dibagikan', 'ditolak'])->default('pending');
             $table->timestamp('tanggal_distribusi')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

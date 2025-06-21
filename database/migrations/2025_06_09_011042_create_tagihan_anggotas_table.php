@@ -26,6 +26,7 @@ return new class extends Migration
             $table->date('tanggal_verifikasi')->nullable();
             $table->string('diverifikasi_oleh')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
 
             // Index untuk performa query
             $table->index(['user_id', 'status']);

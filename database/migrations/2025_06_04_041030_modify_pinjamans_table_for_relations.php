@@ -17,6 +17,7 @@ return new class extends Migration
 
             $table->decimal('bunga', 5, 2)->nullable()->change();
             $table->integer('tenor')->nullable()->change();
+            $table->engine = 'InnoDB';
         });
     }
 

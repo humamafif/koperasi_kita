@@ -26,13 +26,14 @@ return new class extends Migration
             if (!Schema::hasColumn('pinjamans', 'angsuran_per_bulan')) {
                 $table->decimal('angsuran_per_bulan', 15, 2)->nullable()->after('jumlah');
             }
+            $table->engine = 'InnoDB';
         });
     }
 
     /**
      * Reverse the migrations.
      */
-public function down(): void
+    public function down(): void
     {
         Schema::table('pinjamans', function (Blueprint $table) {
             if (Schema::hasColumn('pinjamans', 'tenor_pinjaman_id')) {

@@ -18,7 +18,9 @@ return new class extends Migration
             if (Schema::hasColumn('pinjamans', 'bunga_id')) {
                 $table->dropForeign(['bunga_id']);
                 $table->dropColumn('bunga_id');
+                $table->engine = 'InnoDB';
             }
+            $table->engine = 'InnoDB';
         });
         Schema::dropIfExists('bunga_pinjamans');
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

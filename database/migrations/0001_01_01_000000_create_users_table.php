@@ -19,12 +19,14 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
+            $table->engine = 'InnoDB';
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -34,6 +36,7 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
+            $table->engine = 'InnoDB';
         });
     }
 

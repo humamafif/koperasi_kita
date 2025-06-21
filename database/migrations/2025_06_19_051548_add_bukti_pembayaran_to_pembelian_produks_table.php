@@ -25,6 +25,7 @@ return new class extends Migration
         Schema::table('pembelian_produks', function (Blueprint $table) {
             $table->dropColumn('bukti_pembayaran');
             $table->dropColumn('status_pembayaran');
+            $table->engine = 'InnoDB';
         });
     }
 };

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('no_telepon')->nullable();
             $table->boolean('is_anggota_tetap')->default(false);
             $table->date('tanggal_menjadi_anggota_tetap')->nullable();
+            $table->engine = 'InnoDB';
         });
     }
 

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('tanggal_pengajuan');
             $table->date('tanggal_verifikasi')->nullable();
             $table->string('diverifikasi_oleh')->nullable();
+            $table->engine = 'InnoDB';
             $table->timestamps();
         });
     }

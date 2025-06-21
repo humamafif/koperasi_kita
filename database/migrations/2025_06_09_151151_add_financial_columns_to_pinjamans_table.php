@@ -23,6 +23,7 @@ return new class extends Migration
             ) {
                 $table->dropColumn(['bunga', 'tenor']);
             }
+            $table->engine = 'InnoDB';
         });
     }
 

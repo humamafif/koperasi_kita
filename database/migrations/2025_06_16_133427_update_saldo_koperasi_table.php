@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->decimal('saldo', 15, 2)->default(0);
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

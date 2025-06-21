@@ -15,6 +15,8 @@ return new class extends Migration
             $table->text('value')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
 
         // Insert default values

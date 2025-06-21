@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('keterangan')->nullable();
             $table->boolean('aktif')->default(true);
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

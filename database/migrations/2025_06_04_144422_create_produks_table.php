@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('gambar')->nullable();
             $table->boolean('aktif')->default(true);
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

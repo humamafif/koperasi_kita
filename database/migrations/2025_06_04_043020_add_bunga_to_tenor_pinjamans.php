@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('tenor_pinjamans', function (Blueprint $table) {
             $table->decimal('bunga', 5, 2)->after('nama');
+            $table->engine = 'InnoDB';
         });
     }
 

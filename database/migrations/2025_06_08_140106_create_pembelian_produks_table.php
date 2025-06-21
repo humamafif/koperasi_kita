@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'diproses', 'dikirim', 'selesai', 'dibatalkan'])->default('pending');
             $table->text('catatan')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
 
             // Indeks untuk query yang lebih efisien
             $table->index('pembeli_id');

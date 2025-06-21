@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('keterangan_biaya')->nullable();
             $table->decimal('total_biaya', 12, 2);
             $table->decimal('total_shu', 12, 2);
+            $table->engine = 'InnoDB';
             $table->timestamps();
         });
     }
