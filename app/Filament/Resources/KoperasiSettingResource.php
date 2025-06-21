@@ -22,6 +22,7 @@ class KoperasiSettingResource extends Resource
     protected static ?string $navigationLabel = 'Pengaturan Koperasi';
     protected static ?string $modelLabel = 'Pengaturan Koperasi';
     protected static ?string $navigationGroup = 'Sistem';
+    protected static ?string $pluralModelLabel = 'Pengaturan Koperasi';
     protected static ?int $navigationSort = 100;
 
     public static function form(Form $form): Form
