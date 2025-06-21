@@ -1,5 +1,4 @@
 <?php
-// filepath: d:\Development\menpro\koperasi_kita\app\Models\SHUBiaya.php
 
 namespace App\Models;
 
@@ -21,6 +20,13 @@ class SHUBiaya extends Model
         'keterangan_biaya',
         'total_biaya',
         'total_shu',
+        'persentase_dana_cadangan',
+        'persentase_jasa_usaha',
+        'persentase_jasa_modal',
+        'persentase_jasa_pinjaman',
+        'persentase_jasa_usaha_adjusted',
+        'persentase_jasa_modal_adjusted',
+        'persentase_jasa_pinjaman_adjusted',
     ];
 
     protected $casts = [
@@ -32,5 +38,12 @@ class SHUBiaya extends Model
         'biaya_lainnya' => 'float',
         'total_biaya' => 'float',
         'total_shu' => 'float',
+        'persentase_dana_cadangan' => 'float',
+        'persentase_jasa_usaha' => 'float',
+        'persentase_jasa_modal' => 'float',
+        'persentase_jasa_pinjaman' => 'float',
+        'persentase_jasa_usaha_adjusted' => 'float',
+        'persentase_jasa_modal_adjusted' => 'float',
+        'persentase_jasa_pinjaman_adjusted' => 'float',
     ];
 }

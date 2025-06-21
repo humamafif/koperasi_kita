@@ -48,6 +48,15 @@ class SHUResource extends Resource
                     ->label('Total Simpanan')
                     ->money('IDR')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('total_biaya_admin')
+                    ->label('Biaya Admin')
+                    ->money('IDR')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('total_bunga_pinjaman')
+                    ->label('Bunga Pinjaman')
+                    ->money('IDR')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('persentase_kontribusi')
                     ->label('Persentase Kontribusi')

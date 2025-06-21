@@ -14,6 +14,7 @@ class ViewSHUDistribution extends ViewRecord
 {
     protected static string $resource = SHUDistributionResource::class;
 
+
     protected function getHeaderActions(): array
     {
         return [];
@@ -31,9 +32,20 @@ class ViewSHUDistribution extends ViewRecord
                         Infolists\Components\TextEntry::make('tahun')
                             ->label('Tahun'),
 
-                        Infolists\Components\TextEntry::make('total_simpanan')
-                            ->label('Total Simpanan')
-                            ->money('IDR'),
+                        Infolists\Components\Grid::make(3)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('total_simpanan')
+                                    ->label('Total Simpanan')
+                                    ->money('IDR'),
+
+                                Infolists\Components\TextEntry::make('total_biaya_admin')
+                                    ->label('Total Biaya Admin')
+                                    ->money('IDR'),
+
+                                Infolists\Components\TextEntry::make('total_bunga_pinjaman')
+                                    ->label('Total Bunga Pinjaman')
+                                    ->money('IDR'),
+                            ]),
 
                         Infolists\Components\TextEntry::make('persentase_kontribusi')
                             ->label('Persentase Kontribusi')
@@ -113,6 +125,61 @@ class ViewSHUDistribution extends ViewRecord
                                 ->state($biaya->keterangan_biaya)
                                 ->columnSpanFull()
                                 ->visible(fn() => !empty($biaya->keterangan_biaya)),
+                        ];
+                    })
+                    ->columns(2),
+
+                Infolists\Components\Section::make('Persentase SHU')
+                    ->schema(function () {
+                        $biaya = SHUBiaya::where('tahun', $this->record->tahun)->first();
+
+                        if (!$biaya) {
+                            return [
+                                Infolists\Components\TextEntry::make('no_data')
+                                    ->label('Data Persentase')
+                                    ->state('Tidak ada data persentase SHU untuk tahun ini')
+                                    ->columnSpanFull(),
+                            ];
+                        }
+
+                        return [
+                            Infolists\Components\TextEntry::make('persentase_dana_cadangan')
+                                ->label('Persentase Dana Cadangan')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_dana_cadangan),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_usaha')
+                                ->label('Persentase Jasa Usaha (Awal)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_usaha),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_usaha_adjusted')
+                                ->label('Persentase Jasa Usaha (Disesuaikan)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_usaha_adjusted ?? $biaya->persentase_jasa_usaha)
+                                ->color(fn($state, $record) => $state != $biaya->persentase_jasa_usaha ? 'success' : 'gray'),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_modal')
+                                ->label('Persentase Jasa Modal (Awal)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_modal),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_modal_adjusted')
+                                ->label('Persentase Jasa Modal (Disesuaikan)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_modal_adjusted ?? $biaya->persentase_jasa_modal)
+                                ->color(fn($state, $record) => $state != $biaya->persentase_jasa_modal ? 'success' : 'gray'),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_pinjaman')
+                                ->label('Persentase Jasa Pinjaman (Awal)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_pinjaman),
+
+                            Infolists\Components\TextEntry::make('persentase_jasa_pinjaman_adjusted')
+                                ->label('Persentase Jasa Pinjaman (Disesuaikan)')
+                                ->formatStateUsing(fn($state) => number_format($state, 2) . '%')
+                                ->state($biaya->persentase_jasa_pinjaman_adjusted ?? $biaya->persentase_jasa_pinjaman)
+                                ->color(fn($state, $record) => $state != $biaya->persentase_jasa_pinjaman ? 'success' : 'gray'),
                         ];
                     })
                     ->columns(2),

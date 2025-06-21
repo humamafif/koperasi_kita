@@ -22,7 +22,6 @@ class CreateSHUDistribution extends CreateRecord
     public $formState = [];
     public $saldoKoperasi = 0;
 
-
     protected function getHeaderActions(): array
     {
         return [
@@ -38,14 +37,22 @@ class CreateSHUDistribution extends CreateRecord
                     $this->formState = $state;
 
                     // Ambil nilai-nilai yang dibutuhkan untuk perhitungan
-                    $this->saldoKoperasi = (int) SaldoKoperasi::getSaldo();
+                    $shuService = new SHUCalculationService();
+                    $totalBiayaAdmin = $shuService->getTotalBiayaAdmin();
+                    $totalBungaPinjaman = $shuService->getTotalBungaPinjaman();
+                    $totalSimpanan = $shuService->getTotalSimpanan();
+
+                    // Total saldo koperasi berdasarkan formula baru
+                    $this->saldoKoperasi = SaldoKoperasi::getSaldo();
+
                     $biayaOperasional = (float) ($state['biaya_operasional'] ?? 0);
                     $pajak = (float) ($state['pajak'] ?? 0);
-                    $danaCadangan = (float) ($state['dana_cadangan'] ?? 0);
                     $biayaLainnya = (float) ($state['biaya_lainnya'] ?? 0);
 
-                    // Hitung total biaya dan SHU
-                    $totalBiaya = $biayaOperasional + $pajak + $danaCadangan + $biayaLainnya;
+                    // Hitung total biaya
+                    $totalBiaya = $biayaOperasional + $pajak + $biayaLainnya;
+
+                    // Hitung total SHU berdasarkan formula baru
                     $totalSHU = $this->saldoKoperasi - $totalBiaya;
 
                     if ($totalSHU <= 0) {
@@ -57,16 +64,21 @@ class CreateSHUDistribution extends CreateRecord
                         return;
                     }
 
+                    // Hitung dana cadangan berdasarkan persentase
+                    $persentaseDanaCadangan = (float) ($state['persentase_dana_cadangan'] ?? 40);
+                    $danaCadangan = $totalSHU * ($persentaseDanaCadangan / 100);
+
                     // Perbarui formState dengan hasil perhitungan
                     $this->formState['total_biaya'] = $totalBiaya;
                     $this->formState['total_shu'] = $totalSHU;
+                    $this->formState['dana_cadangan'] = $danaCadangan;
                     $this->formState['show_simulasi'] = true;
                     $this->formState['saldo_koperasi'] = number_format($this->saldoKoperasi, 0, ',', '.');
 
                     // Ambil data simulasi
-                    $jumlahAnggota = (new SHUCalculationService)->getJumlahAnggotaBerhakSHU();
-                    $avgSimpanan = (new SHUCalculationService)->getRataRataSimpananAnggota();
-                    $estimasiDistribusiRata = $jumlahAnggota > 0 ? $totalSHU / $jumlahAnggota : 0;
+                    $jumlahAnggota = $shuService->getJumlahAnggotaBerhakSHU();
+                    $avgSimpanan = $shuService->getRataRataSimpananAnggota();
+                    $estimasiDistribusiRata = $jumlahAnggota > 0 ? $totalSHU * (1 - $persentaseDanaCadangan / 100) / $jumlahAnggota : 0;
 
                     $this->formState['jumlah_anggota'] = $jumlahAnggota;
                     $this->formState['avg_simpanan'] = $avgSimpanan;
@@ -78,25 +90,56 @@ class CreateSHUDistribution extends CreateRecord
                     Notification::make()
                         ->title('Perhitungan Selesai')
                         ->body("Total biaya: Rp " . number_format($totalBiaya, 0, ',', '.') .
-                            "\nTotal SHU: Rp " . number_format($totalSHU, 0, ',', '.'))
+                            "\nTotal SHU: Rp " . number_format($totalSHU, 0, ',', '.') .
+                            "\nDana Cadangan: Rp " . number_format($danaCadangan, 0, ',', '.'))
                         ->success()
                         ->send();
                 }),
         ];
     }
+
+
     public function mount(): void
     {
         parent::mount();
 
-        // Set saldo koperasi saat awal
-        $this->saldoKoperasi = (int) SaldoKoperasi::getSaldo();
+        // Set saldo koperasi saat awal dengan perhitungan baru
+        $shuService = new SHUCalculationService();
+        $totalBiayaAdmin = $shuService->getTotalBiayaAdmin();
+        $totalBungaPinjaman = $shuService->getTotalBungaPinjaman();
+        $totalSimpanan = $shuService->getTotalSimpanan();
+
+        $this->saldoKoperasi = SaldoKoperasi::getSaldo();
 
         // Pre-fill saldo koperasi field dengan format
         $this->form->fill([
             'saldo_koperasi' => number_format($this->saldoKoperasi, 0, ',', '.'),
+            'persentase_dana_cadangan' => 40,
+            'persentase_jasa_usaha' => 20,
+            'persentase_jasa_modal' => 20,
+            'persentase_jasa_pinjaman' => 20,
         ]);
-    }
 
+        // Analisis komponen SHU aktif
+        $componentAnalysis = $shuService->getActiveComponentsAnalysis();
+
+        // Tampilkan notifikasi jika ada komponen yang tidak aktif
+        $inactiveComponents = [];
+        foreach ($componentAnalysis as $name => $component) {
+            if (!$component['aktif']) {
+                $inactiveComponents[] = str_replace('_', ' ', ucfirst($name)) . ' (' . $component['keterangan'] . ')';
+            }
+        }
+
+        if (!empty($inactiveComponents)) {
+            Notification::make()
+                ->title('Komponen SHU Tidak Aktif')
+                ->body('Beberapa komponen SHU tidak aktif dan persentasenya akan didistribusikan secara proporsional: ' . implode(', ', $inactiveComponents))
+                ->warning()
+                ->persistent()
+                ->send();
+        }
+    }
 
     public function create(bool $another = false): void
     {
@@ -118,18 +161,30 @@ class CreateSHUDistribution extends CreateRecord
         try {
             DB::beginTransaction();
 
-            // Ambil saldo koperasi
-            $saldoKoperasi = (float) $this->saldoKoperasi;
-            if ($saldoKoperasi <= 0) {
-                $saldoKoperasi =   SaldoKoperasi::getSaldo();
-            }
-
-            // Parse nilai input biaya
+            // Parse nilai input
             $biayaOperasional = (float) $data['biaya_operasional'];
             $pajak = (float) $data['pajak'];
-            $danaCadangan = (float) $data['dana_cadangan'];
             $biayaLainnya = (float) ($data['biaya_lainnya'] ?? 0);
             $keteranganBiaya = $data['keterangan_biaya'] ?? '';
+
+            // Persentase distribusi SHU
+            $persentaseDanaCadangan = (float) $data['persentase_dana_cadangan'];
+            $persentaseJasaUsaha = (float) $data['persentase_jasa_usaha'];
+            $persentaseJasaModal = (float) $data['persentase_jasa_modal'];
+            $persentaseJasaPinjaman = (float) $data['persentase_jasa_pinjaman'];
+
+            // Validasi total persentase harus 100%
+            $totalPersentase = $persentaseDanaCadangan + $persentaseJasaUsaha + $persentaseJasaModal + $persentaseJasaPinjaman;
+            if (abs($totalPersentase - 100) > 0.01) { // Allowing small floating point differences
+                Notification::make()
+                    ->title('Error Persentase')
+                    ->body('Total persentase harus 100%. Saat ini: ' . number_format($totalPersentase, 2) . '%')
+                    ->danger()
+                    ->send();
+
+                DB::rollBack();
+                return;
+            }
 
             if (!isset($data['total_biaya']) || !isset($data['total_shu']) || (float) $data['total_shu'] <= 0) {
                 Notification::make()
@@ -143,8 +198,15 @@ class CreateSHUDistribution extends CreateRecord
             }
 
             // Hitung ulang untuk memastikan nilai yang benar
-            $calculatedTotalBiaya = $biayaOperasional + $pajak + $danaCadangan + $biayaLainnya;
+            $shuService = new SHUCalculationService();
+            $totalBiayaAdmin = $shuService->getTotalBiayaAdmin();
+            $totalBungaPinjaman = $shuService->getTotalBungaPinjaman();
+            $totalSimpanan = $shuService->getTotalSimpanan();
+
+            $saldoKoperasi = SaldoKoperasi::getSaldo();
+            $calculatedTotalBiaya = $biayaOperasional + $pajak + $biayaLainnya;
             $calculatedTotalSHU = $saldoKoperasi - $calculatedTotalBiaya;
+            $calculatedDanaCadangan = $calculatedTotalSHU * ($persentaseDanaCadangan / 100);
 
             if ($calculatedTotalSHU <= 0) {
                 Notification::make()
@@ -157,22 +219,31 @@ class CreateSHUDistribution extends CreateRecord
                 return;
             }
 
-            // Simpan ke tabel SHUBiaya
+            // Simpan ke tabel SHUBiaya dengan persentase baru
             $shuBiaya = SHUBiaya::create([
                 'tahun' => $tahun,
                 'saldo_koperasi' => $saldoKoperasi,
                 'biaya_operasional' => $biayaOperasional,
                 'pajak' => $pajak,
-                'dana_cadangan' => $danaCadangan,
+                'dana_cadangan' => $calculatedDanaCadangan,
                 'biaya_lainnya' => $biayaLainnya,
-                'keterangan' => $keteranganBiaya,
+                'keterangan_biaya' => $keteranganBiaya,
                 'total_biaya' => $calculatedTotalBiaya,
                 'total_shu' => $calculatedTotalSHU,
-                'tanggal' => now(),
+                'persentase_dana_cadangan' => $persentaseDanaCadangan,
+                'persentase_jasa_usaha' => $persentaseJasaUsaha,
+                'persentase_jasa_modal' => $persentaseJasaModal,
+                'persentase_jasa_pinjaman' => $persentaseJasaPinjaman,
             ]);
 
-            // Hitung dan simpan SHU anggota menggunakan service
-            $result = (new SHUCalculationService)->calculateSHU($tahun, $calculatedTotalSHU);
+            // Hitung dan simpan SHU anggota menggunakan service dengan parameter persentase baru
+            $result = (new SHUCalculationService)->calculateSHU(
+                $tahun,
+                $calculatedTotalSHU,
+                $persentaseJasaUsaha,
+                $persentaseJasaModal,
+                $persentaseJasaPinjaman
+            );
 
             if (!$result['success']) {
                 DB::rollBack();
@@ -188,11 +259,31 @@ class CreateSHUDistribution extends CreateRecord
             // Commit hanya jika semua proses berhasil
             DB::commit();
 
+            // Buat pesan sukses dengan informasi redistribusi
+            $successMessage = "Total SHU: Rp " . number_format($calculatedTotalSHU, 0, ',', '.') .
+                " didistribusikan ke " . count($result['distribusi']) . " anggota";
+
+            // Tambahkan informasi redistribusi jika ada
+            if (isset($result['redistribusi_info']) && $result['redistribusi_info']['persentase_tidak_terpakai'] > 0) {
+                $successMessage .= "\n\nRedistribusi persentase yang tidak terpakai (" .
+                    number_format($result['redistribusi_info']['persentase_tidak_terpakai'], 2) . "%):" .
+                    "\n- Jasa usaha: " . number_format($result['redistribusi_info']['persentase_jasa_usaha_adjusted'], 2) . "%" .
+                    "\n- Jasa modal: " . number_format($result['redistribusi_info']['persentase_jasa_modal_adjusted'], 2) . "%" .
+                    "\n- Jasa pinjaman: " . number_format($result['redistribusi_info']['persentase_jasa_pinjaman_adjusted'], 2) . "%";
+
+                $shuBiaya->update([
+                    'persentase_jasa_usaha_adjusted' => $result['redistribusi_info']['persentase_jasa_usaha_adjusted'],
+                    'persentase_jasa_modal_adjusted' => $result['redistribusi_info']['persentase_jasa_modal_adjusted'],
+                    'persentase_jasa_pinjaman_adjusted' => $result['redistribusi_info']['persentase_jasa_pinjaman_adjusted'],
+                ]);
+            }
+
             Notification::make()
                 ->title("Perhitungan SHU untuk tahun $tahun berhasil")
-                ->body("Total SHU: Rp " . number_format($calculatedTotalSHU, 0, ',', '.') . " didistribusikan ke " . count($result['distribusi']) . " anggota")
+                ->body($successMessage)
                 ->success()
                 ->send();
+
             $this->redirect($this->getResource()::getUrl('index'));
         } catch (\Exception $e) {
             DB::rollBack();
@@ -210,11 +301,6 @@ class CreateSHUDistribution extends CreateRecord
 
     protected function cancel()
     {
-        return [];
-    }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
+        $this->redirect($this->getResource()::getUrl('index'));
     }
 }

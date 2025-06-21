@@ -29,33 +29,32 @@ class SHUDistributionResource extends Resource
     protected static ?int $navigationSort = 30;
     protected static ?string $slug = 'shu-distribution';
 
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Informasi Tahun')
+                Forms\Components\Section::make('Periode & Saldo')
                     ->schema([
-                        Forms\Components\TextInput::make('tahun')
-                            ->label('Tahun SHU')
+                        Forms\Components\Select::make('tahun')
+                            ->label('Tahun Perhitungan SHU')
                             ->required()
-                            ->numeric()
-                            ->default(date('Y'))
-                            ->minValue(2020)
-                            ->maxValue(date('Y')),
-                    ]),
+                            ->options(
+                                fn() => collect(range(date('Y') - 5, date('Y')))
+                                    ->mapWithKeys(fn($year) => [$year => $year])
+                            )
+                            ->default(date('Y') - 1),
 
-                Forms\Components\Section::make('Saldo dan Pemotongan Biaya')
-                    ->schema([
                         Forms\Components\TextInput::make('saldo_koperasi')
-                            ->label('Saldo Koperasi  Ini')
-                            ->required()
+                            ->label('Saldo Koperasi')
                             ->disabled()
-                            ->prefix('Rp')
-                            ->default(function () {
-                                $saldo = (int) SaldoKoperasi::getSaldo();
-                                return number_format($saldo, 0, ',', '.');
-                            }),
+                            ->dehydrated()
+                            ->prefix('Rp'),
+                    ])
+                    ->columns(2),
 
+                Forms\Components\Section::make('Komponen Biaya')
+                    ->schema([
                         Forms\Components\TextInput::make('biaya_operasional')
                             ->label('Biaya Operasional')
                             ->required()
@@ -72,14 +71,6 @@ class SHUDistributionResource extends Resource
                             ->stripCharacters(',')
                             ->prefix('Rp'),
 
-                        Forms\Components\TextInput::make('dana_cadangan')
-                            ->label('Dana Cadangan')
-                            ->required()
-                            ->numeric()
-                            ->stripCharacters(',')
-                            ->mask(RawJs::make('$money($input)'))
-                            ->prefix('Rp'),
-
                         Forms\Components\TextInput::make('biaya_lainnya')
                             ->label('Biaya Lainnya')
                             ->numeric()
@@ -94,9 +85,80 @@ class SHUDistributionResource extends Resource
                     ])
                     ->columns(2),
 
+                Forms\Components\Section::make('Distribusi SHU')
+                    ->schema([
+                        Forms\Components\TextInput::make('persentase_dana_cadangan')
+                            ->label('Persentase Dana Cadangan (%)')
+                            ->required()
+                            ->numeric()
+                            ->default(40)
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                SHUDistributionResource::hitungTotalBiayaDanSHU($get, $set);
+                            })
+                            ->live(),
+
+                        Forms\Components\TextInput::make('persentase_jasa_usaha')
+                            ->label('Persentase Jasa Usaha (%)')
+                            ->required()
+                            ->numeric()
+                            ->default(20)
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                SHUDistributionResource::hitungTotalBiayaDanSHU($get, $set);
+                            })
+                            ->live(),
+
+                        Forms\Components\TextInput::make('persentase_jasa_modal')
+                            ->label('Persentase Jasa Modal (%)')
+                            ->required()
+                            ->numeric()
+                            ->default(20)
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                SHUDistributionResource::hitungTotalBiayaDanSHU($get, $set);
+                            })
+                            ->live(),
+
+                        Forms\Components\TextInput::make('persentase_jasa_pinjaman')
+                            ->label('Persentase Jasa Pinjaman (%)')
+                            ->required()
+                            ->numeric()
+                            ->default(20)
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                SHUDistributionResource::hitungTotalBiayaDanSHU($get, $set);
+                            })
+                            ->live(),
+
+                        Forms\Components\TextInput::make('total_persentase')
+                            ->label('Total Persentase')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->default(100)
+                            ->suffix('%')
+                            ->reactive()
+                            ->afterStateHydrated(function (Forms\Components\TextInput $component, Forms\Get $get) {
+                                $total =
+                                    floatval($get('persentase_dana_cadangan') ?? 40) +
+                                    floatval($get('persentase_jasa_usaha') ?? 20) +
+                                    floatval($get('persentase_jasa_modal') ?? 20) +
+                                    floatval($get('persentase_jasa_pinjaman') ?? 20);
+                                $component->state($total);
+                            }),
+                    ])
+                    ->columns(2),
+
                 Forms\Components\Section::make('Hasil Perhitungan')
                     ->schema([
-
                         Forms\Components\TextInput::make('total_biaya')
                             ->label('Total Biaya')
                             ->disabled()
@@ -114,9 +176,15 @@ class SHUDistributionResource extends Resource
                             ->stripCharacters(',')
                             ->mask(RawJs::make('$money($input)'))
                             ->default(0),
+
+                        Forms\Components\TextInput::make('dana_cadangan')
+                            ->label('Dana Cadangan')
+                            ->disabled()
+                            ->dehydrated()
+                            ->prefix('Rp')
+                            ->default(0),
                     ])
                     ->columns(2),
-
 
                 Forms\Components\Hidden::make('show_simulasi')
                     ->default(false),
@@ -143,7 +211,15 @@ class SHUDistributionResource extends Resource
                     ->label('Total Simpanan')
                     ->money('IDR')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('total_biaya_admin')
+                    ->label('Biaya Admin')
+                    ->money('IDR')
+                    ->sortable(),
 
+                Tables\Columns\TextColumn::make('total_bunga_pinjaman')
+                    ->label('Bunga Pinjaman')
+                    ->money('IDR')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('persentase_kontribusi')
                     ->label('Persentase')
                     ->formatStateUsing(fn($state) => number_format($state * 100, 2) . '%')
