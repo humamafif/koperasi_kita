@@ -238,8 +238,7 @@ class PembelianProdukResource extends Resource
                     })
                     ->visible(
                         fn(PembelianProduk $record): bool =>
-                        $record->penjual_id === Auth::id() &&
-                            !in_array($record->status, ['selesai', 'dibatalkan'])
+                        !in_array($record->status, ['selesai', 'dibatalkan'])
                     ),
                 Tables\Actions\Action::make('lihat_bukti')
                     ->label('Lihat Bukti')
