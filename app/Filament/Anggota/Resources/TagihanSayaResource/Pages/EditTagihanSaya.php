@@ -29,7 +29,7 @@ class EditTagihanSaya extends EditRecord
 
     protected function beforeFill(): void
     {
-        if ($this->record->status !== 'belum_bayar' || $this->record->user_id !== Auth::id()) {
+        if ($this->record->status !== 'belum_bayar') {
             Notification::make()
                 ->title('Tidak dapat mengakses tagihan')
                 ->body('Anda hanya dapat membayar tagihan yang berstatus belum dibayar.')
