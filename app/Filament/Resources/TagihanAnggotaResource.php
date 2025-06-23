@@ -161,6 +161,14 @@ class TagihanAnggotaResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\ImageColumn::make('bukti_pembayaran')
+                    ->label('Bukti Pembayaran')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->height(40)
+                    ->toggleable()
+                    ->visible(fn(TagihanAnggota $record): bool => !empty($record->bukti_pembayaran)),
+
                 Tables\Columns\TextColumn::make('jenis_tagihan')
                     ->label('Jenis Tagihan')
                     ->formatStateUsing(function ($state) {
@@ -268,6 +276,15 @@ class TagihanAnggotaResource extends Resource
             ->actions([
                 // Tables\Actions\ViewAction::make(),
                 // Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('lihat_bukti')
+                    ->label('Lihat Bukti')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->url(
+                        fn(TagihanAnggota $record): string =>
+                        asset('storage/' . $record->bukti_pembayaran)
+                    )
+                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('approve')
                     ->label('Verifikasi')
                     ->icon('heroicon-o-check')
