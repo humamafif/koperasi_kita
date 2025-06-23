@@ -165,9 +165,7 @@ class TagihanAnggotaResource extends Resource
                     ->label('Bukti Pembayaran')
                     ->disk('public')
                     ->visibility('public')
-                    ->height(40)
-                    ->toggleable()
-                    ->visible(fn(TagihanAnggota $record): bool => !empty($record->bukti_pembayaran)),
+                    ->height(40),
 
                 Tables\Columns\TextColumn::make('jenis_tagihan')
                     ->label('Jenis Tagihan')
