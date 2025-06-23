@@ -273,6 +273,7 @@ class SHUDistributionResource extends Resource
                     ->label('Distribusikan SHU')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
+                    ->visible(fn() => SHUDistribution::where('status', 'pending')->exists())
                     ->form([
                         Forms\Components\Select::make('tahun')
                             ->label('Tahun SHU')
@@ -322,6 +323,7 @@ class SHUDistributionResource extends Resource
                     ->label('Batalkan Perhitungan')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->visible(fn() => SHUDistribution::where('status', 'pending')->exists())
                     ->form([
                         Forms\Components\Select::make('tahun')
                             ->label('Tahun SHU')
