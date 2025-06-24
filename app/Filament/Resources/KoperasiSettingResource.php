@@ -64,6 +64,36 @@ class KoperasiSettingResource extends Resource
                                         $component->state(number_format($numericValue, 1, '.', ''));
                                     }),
                             ];
+                        } elseif ($record && in_array($record->key, ['tagihan_cutoff_day', 'tagihan_due_day_new_member', 'tagihan_due_day_regular'])) {
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label(function ($record) {
+                                        return match ($record->key) {
+                                            'tagihan_cutoff_day' => 'Hari Cutoff Tagihan',
+                                            'tagihan_due_day_new_member' => 'Hari Jatuh Tempo (Anggota Baru)',
+                                            'tagihan_due_day_regular' => 'Hari Jatuh Tempo (Reguler)',
+                                            default => 'Nilai'
+                                        };
+                                    })
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(28)
+                                    ->helperText(function ($record) {
+                                        return match ($record->key) {
+                                            'tagihan_cutoff_day' => 'Tanggal cutoff untuk menentukan apakah tagihan dibuat bulan ini atau bulan depan',
+                                            'tagihan_due_day_new_member' => 'Tanggal jatuh tempo untuk tagihan Simpanan Wajib',
+                                            'tagihan_due_day_regular' => 'Tanggal jatuh tempo untuk tagihan bulanan reguler',
+                                            default => ''
+                                        };
+                                    })
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        $component->state((int)$state);
+                                    })
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        $component->state((int)$state);
+                                    }),
+                            ];
                         } elseif ($record && in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
                             // Pengaturan untuk rekening koperasi
                             return [
@@ -120,7 +150,7 @@ class KoperasiSettingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('key')
-                    ->label('Kunci')
+                    ->label('Fitur')
                     ->formatStateUsing(function ($state) {
                         return match ($state) {
                             'simpanan_pokok_amount' => 'Simpanan Pokok',
@@ -129,6 +159,9 @@ class KoperasiSettingResource extends Resource
                             'rekening_koperasi' => 'Rekening Koperasi',
                             'bank_koperasi' => 'Bank Koperasi',
                             'nama_pemilik_rekening' => 'Nama Pemilik Rekening',
+                            'tagihan_cutoff_day' => 'Tanggal Cutoff Tagihan',
+                            'tagihan_due_day_new_member' => 'Tanggal Jatuh Tempo Simpanan Wajib',
+                            'tagihan_due_day_regular' => 'Tanggal Jatuh Tempo (Reguler)',
                             default => $state,
                         };
                     })
@@ -143,6 +176,8 @@ class KoperasiSettingResource extends Resource
                     ->formatStateUsing(function ($state, $record) {
                         if ($record->key === 'biaya_admin_percent') {
                             return number_format((float)$state, 1) . '%';
+                        } else if (in_array($record->key, ['tagihan_cutoff_day', 'tagihan_due_day_new_member', 'tagihan_due_day_regular'])) {
+                            return "Tanggal " . (int)$state;
                         } else if (in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
                             return $state;
                         } else {

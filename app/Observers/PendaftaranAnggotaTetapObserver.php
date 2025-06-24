@@ -34,45 +34,31 @@ class PendaftaranAnggotaTetapObserver
     protected function createMandatorySavingBill(PendaftaranAnggotaTetap $pendaftaran): void
     {
         $startDate = $pendaftaran->tanggal_verifikasi;
-
         $simpananWajibAmount = KoperasiSetting::getSimpananWajibAmount();
 
-        // Log untuk debugging
-        \Illuminate\Support\Facades\Log::info("Membuat tagihan simpanan wajib pertama UDAH UPDATE", [
-            'user_id' => $pendaftaran->user_id,
-            'tanggal_verifikasi' => $startDate->format('Y-m-d'),
-            'tanggal_day' => $startDate->day
-        ]);
+        $cutoffDay = KoperasiSetting::getTagihanCutoffDay();
+        $dueDayNewMember = KoperasiSetting::getTagihanDueDayNewMember();
+        // Aturan:
+        // - Jika tanggal pendaftaran < cutoff_day: buat tagihan bulan ini
+        // - Jika tanggal pendaftaran >= cutoff_day: buat tagihan bulan depan
 
-        // Aturan baru:
-        // - Jika tanggal pendaftaran < 20: buat tagihan bulan ini (dengan jatuh tempo tanggal 25)
-        // - Jika tanggal pendaftaran >= 20: buat tagihan bulan depan (dengan jatuh tempo tanggal 25)
-
-        if ($startDate->day < 20) {
-            // Pendaftaran tanggal < 20, tagihan bulan ini
-            $dueDate = $startDate->copy()->setDay(25);
-            $alasan = "karena tanggal pendaftaran < 20";
+        if ($startDate->day < $cutoffDay) {
+            // Pendaftaran tanggal < cutoff_day, tagihan bulan ini
+            $dueDate = $startDate->copy()->setDay($dueDayNewMember);
+            $alasan = "karena tanggal pendaftaran < {$cutoffDay}";
         } else {
-            // Pendaftaran tanggal >= 20, tagihan bulan depan
-            $dueDate = $startDate->copy()->addMonth()->setDay(25);
-            $alasan = "karena tanggal pendaftaran >= 20";
+            // Pendaftaran tanggal >= cutoff_day, tagihan bulan depan
+            $dueDate = $startDate->copy()->addMonth()->setDay($dueDayNewMember);
+            $alasan = "karena tanggal pendaftaran >= {$cutoffDay}";
         }
 
-        // Khusus jika tanggal pendaftaran >= 25, jatuh tempo sudah lewat, maka gunakan bulan depan
-        if ($startDate->day >= 25 && $startDate->month == $dueDate->month && $startDate->year == $dueDate->year) {
+        // Khusus jika tanggal pendaftaran >= due_day, jatuh tempo sudah lewat, maka gunakan bulan depan
+        if ($startDate->day >= $dueDayNewMember && $startDate->month == $dueDate->month && $startDate->year == $dueDate->year) {
             $dueDate = $dueDate->addMonth();
-            $alasan = "karena tanggal pendaftaran >= 25 (tanggal jatuh tempo bulan ini sudah lewat)";
+            $alasan = "karena tanggal pendaftaran >= {$dueDayNewMember} (tanggal jatuh tempo bulan ini sudah lewat)";
         }
 
         $periode = $dueDate->format('Y-m');
-
-        \Illuminate\Support\Facades\Log::info("Informasi pembuatan tagihan simpanan wajib", [
-            'user_id' => $pendaftaran->user_id,
-            'tanggal_verifikasi' => $startDate->format('Y-m-d'),
-            'tanggal_jatuh_tempo' => $dueDate->format('Y-m-d'),
-            'periode' => $periode,
-            'alasan' => $alasan
-        ]);
 
         $tagihanExists = TagihanAnggota::where('user_id', $pendaftaran->user_id)
             ->where('jenis_tagihan', 'simpanan_wajib')

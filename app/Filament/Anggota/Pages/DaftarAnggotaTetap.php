@@ -141,6 +141,47 @@ class DaftarAnggotaTetap extends Page
                 ->send();
             return;
         }
+        // Validasi NIK - cek apakah sudah digunakan oleh anggota lain
+        $nikExists = PendaftaranAnggotaTetap::where('nik', $data['nik'])
+            ->where('user_id', '!=', Auth::id())
+            ->where(function ($query) {
+                $query->where('status', 'disetujui')
+                    ->orWhere('status', 'pending');
+            })
+            ->exists();
+
+        if ($nikExists) {
+            Notification::make()
+                ->title('NIK Sudah Terdaftar')
+                ->body('NIK yang Anda masukkan sudah terdaftar di sistem. Silakan gunakan NIK lain atau hubungi administrator.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        // Validasi nomor telepon - cek apakah sudah digunakan oleh anggota lain
+        $phoneExists = PendaftaranAnggotaTetap::where('no_telepon', $data['no_telepon'])
+            ->where('user_id', '!=', Auth::id())
+            ->where(function ($query) {
+                $query->where('status', 'disetujui')
+                    ->orWhere('status', 'pending');
+            })
+            ->exists();
+
+        // Cek juga di tabel users
+        $phoneExistsInUsers = \App\Models\User::where('no_telepon', $data['no_telepon'])
+            ->where('id', '!=', Auth::id())
+            ->where('is_anggota_tetap', true)
+            ->exists();
+
+        if ($phoneExists || $phoneExistsInUsers) {
+            Notification::make()
+                ->title('Nomor Telepon Sudah Terdaftar')
+                ->body('Nomor telepon yang Anda masukkan sudah terdaftar di sistem. Silakan gunakan nomor telepon lain.')
+                ->danger()
+                ->send();
+            return;
+        }
         $simpananPokok = \App\Models\KoperasiSetting::getSimpananPokokAmount();
         // Buat pendaftaran anggota tetap
         $pendaftaran = PendaftaranAnggotaTetap::create([
