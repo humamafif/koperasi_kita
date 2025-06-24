@@ -25,6 +25,7 @@ return new class extends Migration
             $table->date('tanggal_persetujuan')->nullable();
             $table->string('disetujui_oleh')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

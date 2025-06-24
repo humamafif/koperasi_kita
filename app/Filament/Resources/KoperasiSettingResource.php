@@ -1,0 +1,267 @@
+<?php
+// filepath: d:\Development\menpro\koperasi_kita\app\Filament\Resources\KoperasiSettingResource.php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\KoperasiSettingResource\Pages;
+use App\Models\KoperasiSetting;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Support\RawJs;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+
+class KoperasiSettingResource extends Resource
+{
+    protected static ?string $model = KoperasiSetting::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static ?string $navigationLabel = 'Pengaturan Koperasi';
+    protected static ?string $modelLabel = 'Pengaturan Koperasi';
+    protected static ?string $navigationGroup = 'Sistem';
+    protected static ?string $pluralModelLabel = 'Pengaturan Koperasi';
+    protected static ?int $navigationSort = 100;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Hidden::make('key'),
+
+                Forms\Components\TextInput::make('description')
+                    ->label('Deskripsi')
+                    ->disabled()
+                    ->columnSpanFull(),
+
+                // Form Input Value sesuai tipe
+                Forms\Components\Group::make()
+                    ->schema(function ($record) {
+                        if ($record && $record->key === 'biaya_admin_percent') {
+                            // Pengaturan khusus untuk biaya admin (persentase)
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label('Nilai')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(0.1)
+                                    ->maxValue(100)
+                                    ->step(0.1)
+                                    ->suffix('%')
+                                    ->inputMode('decimal')
+                                    ->placeholder('1.5')
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        // Format nilai ke angka desimal 1 digit untuk tampilan
+                                        $component->state(number_format((float)$state, 1, '.', ''));
+                                    })
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        // Pastikan state berupa numeric string tanpa format sebelum disimpan
+                                        $numericValue = (float)$state;
+                                        $component->state(number_format($numericValue, 1, '.', ''));
+                                    }),
+                            ];
+                        } elseif ($record && in_array($record->key, ['tagihan_cutoff_day', 'tagihan_due_day_new_member', 'tagihan_due_day_regular'])) {
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label(function ($record) {
+                                        return match ($record->key) {
+                                            'tagihan_cutoff_day' => 'Hari Cutoff Tagihan',
+                                            'tagihan_due_day_new_member' => 'Hari Jatuh Tempo (Anggota Baru)',
+                                            'tagihan_due_day_regular' => 'Hari Jatuh Tempo (Reguler)',
+                                            default => 'Nilai'
+                                        };
+                                    })
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(28)
+                                    ->helperText(function ($record) {
+                                        return match ($record->key) {
+                                            'tagihan_cutoff_day' => 'Tanggal cutoff untuk menentukan apakah tagihan dibuat bulan ini atau bulan depan',
+                                            'tagihan_due_day_new_member' => 'Tanggal jatuh tempo untuk tagihan Simpanan Wajib',
+                                            'tagihan_due_day_regular' => 'Tanggal jatuh tempo untuk tagihan bulanan reguler',
+                                            default => ''
+                                        };
+                                    })
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        $component->state((int)$state);
+                                    })
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        $component->state((int)$state);
+                                    }),
+                            ];
+                        } elseif ($record && in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
+                            // Pengaturan untuk rekening koperasi
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label(function ($record) {
+                                        return match ($record->key) {
+                                            'rekening_koperasi' => 'Nomor Rekening',
+                                            'bank_koperasi' => 'Nama Bank',
+                                            'nama_pemilik_rekening' => 'Nama Pemilik',
+                                            default => 'Nilai'
+                                        };
+                                    })
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->helperText(function ($record) {
+                                        return match ($record->key) {
+                                            'rekening_koperasi' => 'Nomor rekening koperasi untuk pembayaran',
+                                            'bank_koperasi' => 'Nama bank rekening koperasi (contoh: BCA, BRI, dll)',
+                                            'nama_pemilik_rekening' => 'Nama pemilik rekening koperasi',
+                                            default => ''
+                                        };
+                                    })
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        $component->state($state);
+                                    })
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        // Pastikan state berupa string tanpa format khusus sebelum disimpan
+                                        $component->state($state);
+                                    }),
+                            ];
+                        } else {
+                            // Pengaturan untuk nominal uang (simpanan pokok, simpanan wajib)
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label('Nilai')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(1000)
+                                    ->prefix('Rp')
+                                    ->mask(RawJs::make('$money($input)'))->stripCharacters(',')
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        // Pastikan state berupa numeric string tanpa format sebelum disimpan
+                                        $numericValue = preg_replace('/[^0-9]/', '', $state);
+                                        $component->state($numericValue);
+                                    }),
+                            ];
+                        }
+                    }),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('key')
+                    ->label('Fitur')
+                    ->formatStateUsing(function ($state) {
+                        return match ($state) {
+                            'simpanan_pokok_amount' => 'Simpanan Pokok',
+                            'simpanan_wajib_amount' => 'Simpanan Wajib',
+                            'biaya_admin_percent' => 'Biaya Admin (%)',
+                            'rekening_koperasi' => 'Rekening Koperasi',
+                            'bank_koperasi' => 'Bank Koperasi',
+                            'nama_pemilik_rekening' => 'Nama Pemilik Rekening',
+                            'tagihan_cutoff_day' => 'Tanggal Cutoff Tagihan',
+                            'tagihan_due_day_new_member' => 'Tanggal Jatuh Tempo Simpanan Wajib',
+                            'tagihan_due_day_regular' => 'Tanggal Jatuh Tempo (Tagihan Pinjaman)',
+                            default => $state,
+                        };
+                    })
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Deskripsi')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('value')
+                    ->label('Nilai')
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($record->key === 'biaya_admin_percent') {
+                            return number_format((float)$state, 1) . '%';
+                        } else if (in_array($record->key, ['tagihan_cutoff_day', 'tagihan_due_day_new_member', 'tagihan_due_day_regular'])) {
+                            return "Tanggal " . (int)$state;
+                        } else if (in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
+                            return $state;
+                        } else {
+                            return 'Rp ' . number_format((float)$state, 0, ',', '.');
+                        }
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Terakhir Diperbarui')
+                    ->dateTime('d M Y H:i')
+                    ->sortable(),
+            ])
+            ->filters([])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        // Clean up the value before editing
+                        $data['value'] = preg_replace('/[^0-9.]/', '', $data['value']);
+                        return $data;
+                    })
+                    ->successNotification(null) // Nonaktifkan notifikasi default
+                    ->after(function ($record, $data) {
+                        // Hapus cache
+                        try {
+                            Cache::forget('koperasi_setting.' . $record->key);
+                        } catch (\Exception $e) {
+                            // Log error jika terjadi masalah saat menghapus cache
+                            \Illuminate\Support\Facades\Log::error("Error clearing cache: " . $e->getMessage());
+                        }
+
+                        // Buat notifikasi sukses secara manual
+                        try {
+                            $displayValue = '';
+
+                            if ($record->key === 'biaya_admin_percent') {
+                                $displayValue = number_format((float)$record->value, 1) . '%';
+                            } else {
+                                $displayValue = 'Rp ' . number_format((int)$record->value, 0, ',', '.');
+                            }
+
+                            $notificationTitle = '';
+
+                            if ($record->key === 'simpanan_pokok_amount') {
+                                $notificationTitle = "Simpanan pokok diubah menjadi {$displayValue}";
+                            } elseif ($record->key === 'simpanan_wajib_amount') {
+                                $notificationTitle = "Simpanan wajib diubah menjadi {$displayValue}";
+                            } elseif ($record->key === 'biaya_admin_percent') {
+                                $notificationTitle = "Biaya admin diubah menjadi {$displayValue}";
+                            } else {
+                                $notificationTitle = "Pengaturan berhasil diperbarui";
+                            }
+
+                            Notification::make()
+                                ->title($notificationTitle)
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            // Log error jika terjadi masalah saat membuat notifikasi
+                            \Illuminate\Support\Facades\Log::error("Error creating notification: " . $e->getMessage());
+                        }
+                    }),
+            ])
+            ->bulkActions([]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListKoperasiSetting::route('/'),
+        ];
+    }
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return Auth::user()->hasRole("super_admin");
+    }
+}

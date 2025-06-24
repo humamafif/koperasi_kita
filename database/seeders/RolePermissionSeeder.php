@@ -35,6 +35,6 @@ class RolePermissionSeeder extends Seeder
         $anggotaTetap->givePermissionTo(['create_loan', 'create_saving']);
 
         $anggota = Role::findByName('anggota');
-        $anggota->givePermissionTo(['create_loan']);
+        $anggota->syncPermissions();
     }
 }
