@@ -161,7 +161,7 @@ class KoperasiSettingResource extends Resource
                             'nama_pemilik_rekening' => 'Nama Pemilik Rekening',
                             'tagihan_cutoff_day' => 'Tanggal Cutoff Tagihan',
                             'tagihan_due_day_new_member' => 'Tanggal Jatuh Tempo Simpanan Wajib',
-                            'tagihan_due_day_regular' => 'Tanggal Jatuh Tempo (Reguler)',
+                            'tagihan_due_day_regular' => 'Tanggal Jatuh Tempo (Tagihan Pinjaman)',
                             default => $state,
                         };
                     })

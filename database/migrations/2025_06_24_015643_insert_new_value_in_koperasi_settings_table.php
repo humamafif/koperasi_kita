@@ -30,7 +30,7 @@ return new class extends Migration
             [
                 'key' => 'tagihan_due_day_regular',
                 'value' => '10',
-                'description' => 'Hari jatuh tempo untuk tagihan bulanan reguler',
+                'description' => 'Hari jatuh tempo untuk tagihan pinjaman',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
