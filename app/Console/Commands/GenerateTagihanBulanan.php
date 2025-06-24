@@ -24,9 +24,10 @@ class GenerateTagihanBulanan extends Command
 
         // Format periode YYYY-MM
         $periode = sprintf('%04d-%02d', $tahun, $bulan);
-
+        // Ambil hari jatuh tempo dari setting
+        $dueDayRegular = \App\Models\KoperasiSetting::getTagihanDueDayRegular();
         // Tanggal jatuh tempo: tanggal 10 bulan yang ditentukan
-        $tanggalJatuhTempo = Carbon::createFromDate($tahun, $bulan, 10);
+        $tanggalJatuhTempo = Carbon::createFromDate($tahun, $bulan, $dueDayRegular);
 
         $this->info("Memulai generate tagihan untuk periode $periode dengan jatuh tempo {$tanggalJatuhTempo->format('d M Y')}");
 

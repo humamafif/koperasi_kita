@@ -95,19 +95,23 @@ class DaftarAnggotaTetap extends Page
                             ->required()
                             ->rows(3)
                             ->columnSpanFull(),
-
-                        Forms\Components\FileUpload::make('bukti_pembayaran')
-                            ->label('Bukti Pembayaran Simpanan Pokok')
-                            ->required()
-                            ->image()
-                            ->maxSize(2048)
-                            ->directory('bukti-pembayaran/simpanan-pokok')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->getUploadedFileNameForStorageUsing(
-                                fn(TemporaryUploadedFile $file): string =>
-                                'simpanan-pokok-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
-                            )
+                        Forms\Components\Section::make('Pembayaran Tagihan')->schema([
+                            Forms\Components\View::make('filament.components.rekening-info')
+                                ->label('Informasi Rekening')
+                                ->columnSpanFull(),
+                            Forms\Components\FileUpload::make('bukti_pembayaran')
+                                ->label('Bukti Pembayaran Simpanan Pokok')
+                                ->required()
+                                ->image()
+                                ->maxSize(2048)
+                                ->directory('bukti-pembayaran/simpanan-pokok')
+                                ->disk('public')
+                                ->visibility('public')
+                                ->getUploadedFileNameForStorageUsing(
+                                    fn(TemporaryUploadedFile $file): string =>
+                                    'simpanan-pokok-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
+                                )
+                        ]),
                     ]),
 
                 Forms\Components\Section::make('Pernyataan')
@@ -133,6 +137,47 @@ class DaftarAnggotaTetap extends Page
             Notification::make()
                 ->title('Persetujuan Diperlukan')
                 ->body('Anda harus menyetujui pernyataan untuk melanjutkan pendaftaran.')
+                ->danger()
+                ->send();
+            return;
+        }
+        // Validasi NIK - cek apakah sudah digunakan oleh anggota lain
+        $nikExists = PendaftaranAnggotaTetap::where('nik', $data['nik'])
+            ->where('user_id', '!=', Auth::id())
+            ->where(function ($query) {
+                $query->where('status', 'disetujui')
+                    ->orWhere('status', 'pending');
+            })
+            ->exists();
+
+        if ($nikExists) {
+            Notification::make()
+                ->title('NIK Sudah Terdaftar')
+                ->body('NIK yang Anda masukkan sudah terdaftar di sistem. Silakan gunakan NIK lain atau hubungi administrator.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        // Validasi nomor telepon - cek apakah sudah digunakan oleh anggota lain
+        $phoneExists = PendaftaranAnggotaTetap::where('no_telepon', $data['no_telepon'])
+            ->where('user_id', '!=', Auth::id())
+            ->where(function ($query) {
+                $query->where('status', 'disetujui')
+                    ->orWhere('status', 'pending');
+            })
+            ->exists();
+
+        // Cek juga di tabel users
+        $phoneExistsInUsers = \App\Models\User::where('no_telepon', $data['no_telepon'])
+            ->where('id', '!=', Auth::id())
+            ->where('is_anggota_tetap', true)
+            ->exists();
+
+        if ($phoneExists || $phoneExistsInUsers) {
+            Notification::make()
+                ->title('Nomor Telepon Sudah Terdaftar')
+                ->body('Nomor telepon yang Anda masukkan sudah terdaftar di sistem. Silakan gunakan nomor telepon lain.')
                 ->danger()
                 ->send();
             return;

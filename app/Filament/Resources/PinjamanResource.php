@@ -263,7 +263,8 @@ class PinjamanResource extends Resource
                                 ->delete();
 
                             for ($i = 1; $i <= $tenor; $i++) {
-                                $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i)->setDay(10);
+                                $dueDayRegular = \App\Models\KoperasiSetting::getTagihanDueDayRegular();
+                                $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i)->setDay($dueDayRegular);
                                 $periode = $dueDate->format('Y-m');
 
                                 \App\Models\TagihanAnggota::create([

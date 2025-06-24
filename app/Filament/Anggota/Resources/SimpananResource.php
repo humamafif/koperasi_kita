@@ -76,20 +76,25 @@ class SimpananResource extends Resource
                             ->label('Keterangan')
                             ->placeholder('Masukkan keterangan jika diperlukan')
                             ->columnSpanFull(),
-
-                        Forms\Components\FileUpload::make('bukti_pembayaran')
-                            ->label('Bukti Pembayaran')
-                            ->required()
-                            ->image()
-                            ->maxSize(2048) // 2MB
-                            ->directory('bukti-pembayaran/simpanan')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->columnSpanFull()
-                            ->getUploadedFileNameForStorageUsing(
-                                fn(TemporaryUploadedFile $file): string =>
-                                'simpanan-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
-                            )
+                        Forms\Components\Section::make('Informasi Pembayaran')
+                            ->schema([
+                                Forms\Components\View::make('filament.components.rekening-info')
+                                    ->label('Informasi Rekening')
+                                    ->columnSpanFull(),
+                                Forms\Components\FileUpload::make('bukti_pembayaran')
+                                    ->label('Bukti Pembayaran')
+                                    ->required()
+                                    ->image()
+                                    ->maxSize(2048) // 2MB
+                                    ->directory('bukti-pembayaran/simpanan')
+                                    ->disk('public')
+                                    ->visibility('public')
+                                    ->columnSpanFull()
+                                    ->getUploadedFileNameForStorageUsing(
+                                        fn(TemporaryUploadedFile $file): string =>
+                                        'simpanan-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
+                                    )
+                            ]),
                     ])
                     ->columns(2),
 

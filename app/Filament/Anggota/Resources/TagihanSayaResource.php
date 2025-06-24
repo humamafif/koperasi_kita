@@ -118,6 +118,9 @@ class TagihanSayaResource extends Resource
 
                 Forms\Components\Section::make('Upload Bukti Pembayaran')
                     ->schema([
+                        Forms\Components\View::make('filament.components.rekening-info')
+                            ->label('Informasi Rekening')
+                            ->columnSpanFull(),
                         Forms\Components\FileUpload::make('bukti_pembayaran')
                             ->label('Bukti Pembayaran')
                             ->required()
