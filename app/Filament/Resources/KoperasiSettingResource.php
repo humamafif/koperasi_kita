@@ -12,6 +12,8 @@ use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class KoperasiSettingResource extends Resource
@@ -62,6 +64,36 @@ class KoperasiSettingResource extends Resource
                                         $component->state(number_format($numericValue, 1, '.', ''));
                                     }),
                             ];
+                        } elseif ($record && in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
+                            // Pengaturan untuk rekening koperasi
+                            return [
+                                Forms\Components\TextInput::make('value')
+                                    ->label(function ($record) {
+                                        return match ($record->key) {
+                                            'rekening_koperasi' => 'Nomor Rekening',
+                                            'bank_koperasi' => 'Nama Bank',
+                                            'nama_pemilik_rekening' => 'Nama Pemilik',
+                                            default => 'Nilai'
+                                        };
+                                    })
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->helperText(function ($record) {
+                                        return match ($record->key) {
+                                            'rekening_koperasi' => 'Nomor rekening koperasi untuk pembayaran',
+                                            'bank_koperasi' => 'Nama bank rekening koperasi (contoh: BCA, BRI, dll)',
+                                            'nama_pemilik_rekening' => 'Nama pemilik rekening koperasi',
+                                            default => ''
+                                        };
+                                    })
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        $component->state($state);
+                                    })
+                                    ->beforeStateDehydrated(function ($component, $state) {
+                                        // Pastikan state berupa string tanpa format khusus sebelum disimpan
+                                        $component->state($state);
+                                    }),
+                            ];
                         } else {
                             // Pengaturan untuk nominal uang (simpanan pokok, simpanan wajib)
                             return [
@@ -89,6 +121,17 @@ class KoperasiSettingResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('key')
                     ->label('Kunci')
+                    ->formatStateUsing(function ($state) {
+                        return match ($state) {
+                            'simpanan_pokok_amount' => 'Simpanan Pokok',
+                            'simpanan_wajib_amount' => 'Simpanan Wajib',
+                            'biaya_admin_percent' => 'Biaya Admin (%)',
+                            'rekening_koperasi' => 'Rekening Koperasi',
+                            'bank_koperasi' => 'Bank Koperasi',
+                            'nama_pemilik_rekening' => 'Nama Pemilik Rekening',
+                            default => $state,
+                        };
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('description')
@@ -100,6 +143,8 @@ class KoperasiSettingResource extends Resource
                     ->formatStateUsing(function ($state, $record) {
                         if ($record->key === 'biaya_admin_percent') {
                             return number_format((float)$state, 1) . '%';
+                        } else if (in_array($record->key, ['rekening_koperasi', 'bank_koperasi', 'nama_pemilik_rekening'])) {
+                            return $state;
                         } else {
                             return 'Rp ' . number_format((float)$state, 0, ',', '.');
                         }
@@ -178,5 +223,10 @@ class KoperasiSettingResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return Auth::user()->hasRole("super_admin");
     }
 }

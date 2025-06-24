@@ -11,7 +11,51 @@ class KoperasiSetting extends Model
     use HasFactory;
 
     protected $fillable = ['key', 'value', 'description'];
+    /**
+     * Mendapatkan informasi rekening koperasi
+     *
+     * @return array
+     */
+    public static function getRekeningInfo(): array
+    {
+        return [
+            'nomor' => self::getValue('rekening_koperasi'),
+            'bank' => self::getValue('bank_koperasi'),
+            'nama_pemilik' => self::getValue('nama_pemilik_rekening'),
+        ];
+    }
 
+    /**
+     * Mendapatkan informasi rekening koperasi dalam format yang siap ditampilkan
+     *
+     * @return string
+     */
+    public static function getRekeningInfoDisplay(): string
+    {
+        $info = self::getRekeningInfo();
+        return "{$info['bank']} {$info['nomor']} a.n {$info['nama_pemilik']}";
+    }
+
+    /**
+     * Update informasi rekening koperasi
+     *
+     * @param string $nomor
+     * @param string $bank
+     * @param string $namaPemilik
+     * @return bool
+     */
+    public static function updateRekeningInfo(string $nomor, string $bank, string $namaPemilik): bool
+    {
+        $updated1 = self::setValue('rekening_koperasi', $nomor, 'Nomor rekening koperasi untuk pembayaran');
+        $updated2 = self::setValue('bank_koperasi', $bank, 'Nama bank rekening koperasi');
+        $updated3 = self::setValue('nama_pemilik_rekening', $namaPemilik, 'Nama pemilik rekening koperasi');
+
+        Cache::forget('koperasi_setting.rekening_koperasi');
+        Cache::forget('koperasi_setting.bank_koperasi');
+        Cache::forget('koperasi_setting.nama_pemilik_rekening');
+
+        return $updated1 && $updated2 && $updated3;
+    }
     /**
      * Mendapatkan nilai konfigurasi berdasarkan key
      */

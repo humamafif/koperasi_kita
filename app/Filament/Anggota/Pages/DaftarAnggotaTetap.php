@@ -95,19 +95,23 @@ class DaftarAnggotaTetap extends Page
                             ->required()
                             ->rows(3)
                             ->columnSpanFull(),
-
-                        Forms\Components\FileUpload::make('bukti_pembayaran')
-                            ->label('Bukti Pembayaran Simpanan Pokok')
-                            ->required()
-                            ->image()
-                            ->maxSize(2048)
-                            ->directory('bukti-pembayaran/simpanan-pokok')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->getUploadedFileNameForStorageUsing(
-                                fn(TemporaryUploadedFile $file): string =>
-                                'simpanan-pokok-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
-                            )
+                        Forms\Components\Section::make('Pembayaran Tagihan')->schema([
+                            Forms\Components\View::make('filament.components.rekening-info')
+                                ->label('Informasi Rekening')
+                                ->columnSpanFull(),
+                            Forms\Components\FileUpload::make('bukti_pembayaran')
+                                ->label('Bukti Pembayaran Simpanan Pokok')
+                                ->required()
+                                ->image()
+                                ->maxSize(2048)
+                                ->directory('bukti-pembayaran/simpanan-pokok')
+                                ->disk('public')
+                                ->visibility('public')
+                                ->getUploadedFileNameForStorageUsing(
+                                    fn(TemporaryUploadedFile $file): string =>
+                                    'simpanan-pokok-' . Auth::id() . '-' . time() . '.' . $file->getClientOriginalExtension()
+                                )
+                        ]),
                     ]),
 
                 Forms\Components\Section::make('Pernyataan')
