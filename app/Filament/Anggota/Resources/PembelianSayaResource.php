@@ -25,6 +25,13 @@ class PembelianSayaResource extends Resource
     protected static ?string $modelLabel = 'Pembelian';
     protected static ?string $slug = 'pembelian-saya';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = PembelianProduk::where('pembeli_id', Auth::id())
+            ->whereIn('status', ['diproses', 'dikirim'])
+            ->count();
+        return $count > 0 ? (string) $count : null;
+    }
     public static function form(Form $form): Form
     {
         return $form
