@@ -29,6 +29,7 @@ class AnggotaPanelProvider extends PanelProvider
     {
         return $panel
             ->id('anggota')
+            ->spa()
             ->path('anggota')
             ->login()
             ->homeUrl('/')
