@@ -6,6 +6,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Middleware\CheckAnggotaTetapStatus;
 use App\Http\Middleware\EnsureUserIsAnggota;
 use App\Models\PendaftaranAnggotaTetap;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -30,6 +31,7 @@ class AnggotaPanelProvider extends PanelProvider
         return $panel
             ->id('anggota')
             ->spa()
+            ->defaultThemeMode(ThemeMode::Light)
             ->path('anggota')
             ->login()
             ->homeUrl('/')
