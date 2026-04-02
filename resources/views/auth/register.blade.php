@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Daftar - Koperasi Kita</title>
+    <title>Daftar - Koperasi MerahPutih</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('assets/icon.png') }}" type="image/x-icon">
@@ -18,28 +18,28 @@
 
     <style>
         .custom-green {
-            background-color: #6BB914;
+            background-color: #E31E24;
         }
 
         .custom-green-hover:hover {
-            background-color: #5da710;
+            background-color: #c0191e;
         }
 
         .custom-green-text {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .custom-green-text:hover {
-            color: #5da710;
+            color: #c0191e;
         }
 
         .custom-green-border:focus {
-            border-color: #6BB914;
-            box-shadow: 0 0 0 1px #6BB914;
+            border-color: #E31E24;
+            box-shadow: 0 0 0 1px #E31E24;
         }
 
         .custom-green-ring:focus {
-            --tw-ring-color: #6BB914;
+            --tw-ring-color: #E31E24;
         }
     </style>
 </head>
@@ -50,7 +50,7 @@
             <!-- Logo -->
             <div class="flex justify-center mb-6">
                 <a href="/">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi Kita" class="h-16 w-auto">
+                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi MerahPutih" class="h-16 w-auto">
                 </a>
             </div>
 

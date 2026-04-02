@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Koperasi Kita - Solusi Finansial Bersama</title>
+    <title>Koperasi MerahPutih - Solusi Finansial Bersama</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('assets/icon.png') }}" type="image/x-icon">
@@ -44,29 +44,29 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        /* Custom Green Color */
+        /* Custom Red Color */
         .bg-custom-green {
-            background-color: #6BB914;
+            background-color: #E31E24;
         }
 
         .bg-custom-green:hover {
-            background-color: #5da012;
+            background-color: #c0191e;
         }
 
         .text-custom-green {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .hover\:text-custom-green:hover {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .border-custom-green {
-            border-color: #6BB914;
+            border-color: #E31E24;
         }
 
         .bg-custom-green-light {
-            background-color: rgba(107, 185, 20, 0.1);
+            background-color: rgba(227, 30, 36, 0.1);
         }
     </style>
 </head>
@@ -77,7 +77,7 @@
         <nav class="container mx-auto px-4 md:px-8 flex items-center justify-between">
             <div class="flex items-center">
                 <a href="/" class="flex items-center">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi Kita Logo" class="h-10 w-auto mr-3">
+                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi MerahPutih Logo" class="h-10 w-auto mr-3">
                 </a>
             </div>
 
@@ -160,8 +160,8 @@
                     Solusi Finansial yang Tepercaya untuk Anggota
                 </h1>
                 <p class="text-lg md:text-xl mb-8">
-                    <span class="font-bold text-2xl" style="color: #6BB914;">Koperasi</span><span
-                        class="font-bold text-2xl" style="color: #3E5368;">Kita</span>
+                    <span class="text-2xl">Koperasi</span><span class="font-bold text-2xl" style="color: #E31E24;">
+                        Merah</span><span class="font-bold text-2xl" style="color: #ffadb0;">Putih</span>
                     <span class="font-light">membantu Anda
                         mengelola
                         keuangan,

@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Controllers\RegisterController;
+
 use App\Http\Middleware\CheckAnggotaTetapStatus;
 use App\Http\Middleware\EnsureUserIsAnggota;
 use App\Models\PendaftaranAnggotaTetap;
@@ -14,8 +14,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -33,12 +31,13 @@ class AnggotaPanelProvider extends PanelProvider
             ->spa()
             ->defaultThemeMode(ThemeMode::Light)
             ->path('anggota')
+            ->brandName('Koperasi MerahPutih')
             ->login()
             ->homeUrl('/')
             ->registration()
             ->font('Aileron')
             ->colors([
-                'primary' => '#3E5368',
+                'primary' => '#E31E24',
             ])
             ->globalSearch(false)
             ->brandLogo(asset('assets/logo.png'))

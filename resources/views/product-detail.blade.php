@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $product->nama }} - Koperasi Kita</title>
+    <title>{{ $product->nama }} - Koperasi MerahPutih</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('assets/icon.png') }}" type="image/x-icon">
@@ -22,37 +22,37 @@
             transition: all 0.3s ease;
         }
 
-        /* Custom classes to replace Tailwind green shades */
+        /* Custom Red Color */
         .bg-custom-green {
-            background-color: #6BB914;
+            background-color: #E31E24;
         }
 
         .text-custom-green {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .hover\:bg-custom-green-dark:hover {
-            background-color: #5A9A11;
+            background-color: #c0191e;
             /* Slightly darker shade for hover */
         }
 
         .hover\:text-custom-green:hover {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .bg-custom-green-light {
-            background-color: #E8F5D4;
-            /* Light green for backgrounds like green-100 */
+            background-color: #fce8e9;
+            /* Light red for backgrounds */
         }
 
         .text-custom-green-dark {
-            color: #4A7B0E;
-            /* Darker green for text like green-800 */
+            color: #b91c1c;
+            /* Darker red for text */
         }
 
         .hover\:text-custom-green-dark:hover {
-            color: #4A7B0E;
-            /* Darker green for hover like green-800 */
+            color: #b91c1c;
+            /* Darker red for hover */
         }
     </style>
 </head>
@@ -63,7 +63,7 @@
         <nav class="container mx-auto px-4 md:px-8 flex items-center justify-between">
             <div class="flex items-center">
                 <a href="/" class="flex items-center">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi Kita Logo" class="h-10 w-auto mr-3">
+                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi MerahPutih Logo" class="h-10 w-auto mr-3">
                 </a>
             </div>
 

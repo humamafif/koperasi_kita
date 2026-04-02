@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Produk Koperasi Kita</title>
+    <title>Produk Koperasi MerahPutih</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('assets/icon.png') }}" type="image/x-icon">
@@ -31,44 +31,44 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        /* Custom classes to replace Tailwind green shades */
+        /* Custom Red Color */
         .bg-custom-green {
-            background-color: #6BB914;
+            background-color: #E31E24;
         }
 
         .text-custom-green {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .hover\:bg-custom-green-dark:hover {
-            background-color: #5A9A11;
+            background-color: #c0191e;
             /* Slightly darker shade for hover */
         }
 
         .hover\:text-custom-green:hover {
-            color: #6BB914;
+            color: #E31E24;
         }
 
         .border-custom-green {
-            border-color: #6BB914;
+            border-color: #E31E24;
         }
 
         .focus\:ring-custom-green:focus {
-            --tw-ring-color: #6BB914;
+            --tw-ring-color: #E31E24;
         }
 
         .focus\:border-custom-green:focus {
-            border-color: #6BB914;
+            border-color: #E31E24;
         }
 
         .bg-custom-green-light {
-            background-color: #E8F5D4;
-            /* Light green for backgrounds like green-100 */
+            background-color: #fce8e9;
+            /* Light red for backgrounds */
         }
 
         .text-custom-green-dark {
-            color: #4A7B0E;
-            /* Darker green for text like green-800 */
+            color: #b91c1c;
+            /* Darker red for text */
         }
     </style>
 </head>
@@ -79,7 +79,7 @@
         <nav class="container mx-auto px-4 md:px-8 flex items-center justify-between">
             <div class="flex items-center">
                 <a href="/" class="flex items-center">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi Kita Logo" class="h-10 w-auto mr-3">
+                    <img src="{{ asset('assets/logo.png') }}" alt="Koperasi MerahPutih Logo" class="h-10 w-auto mr-3">
                 </a>
             </div>
 

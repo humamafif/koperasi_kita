@@ -32,9 +32,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->registration()
             ->globalSearch(false)
+            ->brandName('Koperasi MerahPutih')
             ->login()
             ->colors([
-                'primary' => "#6BB914",
+                'primary' => "#E31E24",
             ])
             ->font('Aileron')
             ->homeUrl('/')
