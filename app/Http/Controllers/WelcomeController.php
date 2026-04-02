@@ -33,8 +33,22 @@ class WelcomeController extends Controller
                 ->orWhere('deskripsi', 'like', '%' . $request->search . '%');
         }
 
-        $products = $query->orderBy('created_at', 'desc')
-            ->paginate(12);
+        // Ambil semua data setelah filter untuk sorting manual
+        $allProducts = $query->get()->toArray();
+
+        // Implementasi Quick Sort berdasarkan harga
+        $sortOrder = $request->get('sort', 'latest');
+
+        if ($sortOrder === 'price_asc' || $sortOrder === 'price_desc') {
+            $allProducts = $this->quickSort($allProducts, 'harga', $sortOrder === 'price_asc');
+        } else {
+            // Default sort by created_at desc (manual array sort for consistency)
+            usort($allProducts, function ($a, $b) {
+                return strtotime($b['created_at']) - strtotime($a['created_at']);
+            });
+        }
+
+        $products = collect($allProducts);
 
         $categories = Produk::where('aktif', true)
             ->select('kategori')
@@ -42,6 +56,43 @@ class WelcomeController extends Controller
             ->pluck('kategori');
 
         return view('products', compact('products', 'categories'));
+    }
+
+    /**
+     * Algoritma Quick Sort
+     */
+    private function quickSort(array $items, $field, $ascending = true)
+    {
+        if (count($items) < 2) {
+            return $items;
+        }
+
+        $left = $right = [];
+        reset($items);
+        $pivot_key = key($items);
+        $pivot = array_shift($items);
+
+        foreach ($items as $item) {
+            if ($ascending) {
+                if ($item[$field] < $pivot[$field]) {
+                    $left[] = $item;
+                } else {
+                    $right[] = $item;
+                }
+            } else {
+                if ($item[$field] > $pivot[$field]) {
+                    $left[] = $item;
+                } else {
+                    $right[] = $item;
+                }
+            }
+        }
+
+        return array_merge(
+            $this->quickSort($left, $field, $ascending),
+            [$pivot],
+            $this->quickSort($right, $field, $ascending)
+        );
     }
 
     public function showProduct($id)

@@ -151,40 +151,66 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Produk Koperasi</h1>
 
         <!-- Filter dan Search -->
-        <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-2">
-                <form action="{{ route('products.index') }}" method="GET" class="flex space-x-2">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari produk..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-custom-green focus:border-custom-green">
-                    <button type="submit"
-                        class="px-4 py-2 bg-custom-green text-white rounded-lg hover:bg-custom-green-dark focus:outline-none">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-            <div>
-                <form action="{{ route('products.index') }}" method="GET">
-                    @if (request('search'))
-                        <input type="hidden" name="search" value="{{ request('search') }}">
-                    @endif
-                    <select name="kategori" onchange="this.form.submit()"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-custom-green focus:border-custom-green">
-                        <option value="semua"
-                            {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>Semua
-                            Kategori</option>
-                        @foreach ($categories as $category)
-                            <option value="{{ $category }}"
-                                {{ request('kategori') == $category ? 'selected' : '' }}>
-                                {{ $category }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
+        <div class="md:col-span-1">
+            <form id="filter-form" action="{{ route('products.index') }}" method="GET" class="flex space-x-2">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari produk..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-custom-green focus:border-custom-green">
+                <button type="submit"
+                    class="px-4 py-2 bg-custom-green text-white rounded-lg hover:bg-custom-green-dark focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+                @if (request('kategori'))
+                    <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+                @endif
+                @if (request('sort'))
+                    <input type="hidden" name="sort" value="{{ request('sort') }}">
+                @endif
+            </form>
+        </div>
+        <div class="flex justify-end items-center mt-4 gap-4 mb-4">
+            <p class="font-semibold">Filter:</p>
+            <form action="{{ route('products.index') }}" method="GET">
+                @if (request('search'))
+                    <input type="hidden" name="search" value="{{ request('search') }}">
+                @endif
+                @if (request('sort'))
+                    <input type="hidden" name="sort" value="{{ request('sort') }}">
+                @endif
+                <select name="kategori" onchange="this.form.submit()"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-custom-green focus:border-custom-green">
+                    <option value="semua"
+                        {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>Semua
+                        Kategori</option>
+                    @foreach ($categories as $category)
+                        <option value="{{ $category }}" {{ request('kategori') == $category ? 'selected' : '' }}>
+                            {{ $category }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+
+            <form action="{{ route('products.index') }}" method="GET">
+                @if (request('search'))
+                    <input type="hidden" name="search" value="{{ request('search') }}">
+                @endif
+                @if (request('kategori'))
+                    <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+                @endif
+                <select name="sort" onchange="this.form.submit()"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-custom-green focus:border-custom-green">
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                    <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Harga
+                        Terendah
+                    </option>
+                    <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Harga
+                        Tertinggi
+                    </option>
+                </select>
+            </form>
         </div>
 
         @if ($products->isEmpty())
@@ -203,10 +229,11 @@
                 @foreach ($products as $product)
                     <div
                         class="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
-                        <a href="{{ route('products.show', $product->id) }}">
+                        <a href="{{ route('products.show', is_array($product) ? $product['id'] : $product->id) }}">
                             <div class="h-48 overflow-hidden">
-                                @if ($product->gambar)
-                                    <img src="{{ asset('storage/' . $product->gambar) }}" alt="{{ $product->nama }}"
+                                @if (is_array($product) ? $product['gambar'] : $product->gambar)
+                                    <img src="{{ asset('storage/' . (is_array($product) ? $product['gambar'] : $product->gambar)) }}"
+                                        alt="{{ is_array($product) ? $product['nama'] : $product->nama }}"
                                         class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-gray-200">
@@ -222,27 +249,26 @@
                         </a>
                         <div class="p-4">
                             <span
-                                class="text-xs font-semibold bg-custom-green-light text-custom-green-dark px-2 py-1 rounded-full">{{ $product->kategori }}</span>
+                                class="text-xs font-semibold bg-custom-green-light text-custom-green-dark px-2 py-1 rounded-full">{{ is_array($product) ? $product['kategori'] : $product->kategori }}</span>
                             <h3 class="mt-2 text-twelve font-semibold text-gray-800 hover:text-custom-green truncate">
-                                <a href="{{ route('products.show', $product->id) }}">{{ $product->nama }}</a>
+                                <a
+                                    href="{{ route('products.show', is_array($product) ? $product['id'] : $product->id) }}">{{ is_array($product) ? $product['nama'] : $product->nama }}</a>
                             </h3>
                             <p class="mt-1 text-gray-600 h-12 overflow-hidden text-sm">
-                                {{ \Illuminate\Support\Str::limit(strip_tags($product->deskripsi), 60) }}
+                                {{ \Illuminate\Support\Str::limit(strip_tags(is_array($product) ? $product['deskripsi'] : $product->deskripsi), 60) }}
                             </p>
                             <div class="mt-4 flex justify-between items-center">
                                 <span class="text-lg font-bold text-custom-green">Rp
-                                    {{ number_format($product->harga, 0, ',', '.') }}</span>
-                                <span class="text-sm text-gray-500">Stok: {{ $product->stok }}</span>
+                                    {{ number_format(is_array($product) ? $product['harga'] : $product->harga, 0, ',', '.') }}</span>
+                                <span class="text-sm text-gray-500">Stok:
+                                    {{ is_array($product) ? $product['stok'] : $product->stok }}</span>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-8">
-                {{ $products->links() }}
-            </div>
+            <!-- Pagination dihapus untuk memperjelas hasil Quick Sort -->
         @endif
     </main>
 
