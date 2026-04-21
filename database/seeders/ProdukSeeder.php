@@ -20,6 +20,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 50,
                 'kategori' => 'Sembako',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Minyak Goreng 2L',
@@ -28,6 +29,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 100,
                 'kategori' => 'Sembako',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Gula Pasir 1kg',
@@ -36,6 +38,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 200,
                 'kategori' => 'Sembako',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Sabun Cuci Piring 800ml',
@@ -44,6 +47,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 80,
                 'kategori' => 'Kebersihan',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Susu Kaleng 370g',
@@ -52,6 +56,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 150,
                 'kategori' => 'Minuman',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Teh Celup (Isi 25)',
@@ -60,6 +65,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 300,
                 'kategori' => 'Minuman',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Kopi Bubuk 165g',
@@ -68,6 +74,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 120,
                 'kategori' => 'Minuman',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Deterjen Bubuk 800g',
@@ -76,6 +83,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 90,
                 'kategori' => 'Kebersihan',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Telur Ayam (1kg)',
@@ -84,6 +92,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 30,
                 'kategori' => 'Sembako',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Mie Instan (Dus)',
@@ -92,6 +101,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 25,
                 'kategori' => 'Sembako',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Pasta Gigi 190g',
@@ -100,6 +110,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 110,
                 'kategori' => 'Kebersihan',
                 'aktif' => true,
+                'user_id' => 3,
             ],
             [
                 'nama' => 'Shampoo 170ml',
@@ -108,6 +119,7 @@ class ProdukSeeder extends Seeder
                 'stok' => 70,
                 'kategori' => 'Kebersihan',
                 'aktif' => true,
+                'user_id' => 3,
             ],
         ];
 
